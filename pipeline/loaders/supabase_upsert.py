@@ -29,7 +29,7 @@ for _col in (
     "perf_1w", "perf_1m", "perf_3m", "perf_6m", "perf_1y", "perf_ytd",
     "short_pct_float", "insider_pct", "inst_pct", "expense_ratio",
     "inst_transactions_pct", "earnings_surprise_pct", "avg_dividend_yield_5y",
-    "fcf_yield",
+    "fcf_yield", "target_upside_pct",
 ):
     _COL_MAX[_col] = _NUMERIC_8_4
 
@@ -38,6 +38,7 @@ for _col in (
     "revenue_growth", "earnings_growth", "op_income_growth", "debt_growth",
     "roic", "payout_ratio", "eps_growth_this_yr", "eps_growth_past_5y",
     "sales_growth_past_5y", "macd", "macd_signal", "macd_hist",
+    "dividend_rate",
 ):
     _COL_MAX[_col] = 999999.9999  # NUMERIC(10,4)
 
@@ -54,8 +55,17 @@ for _col in ("rsi_14", "relative_volume", "stoch_k", "stoch_d",
 for _col in ("pe_ttm", "pe_forward", "pb_ratio", "peg_ratio", "ps_ratio",
              "pfcf_ratio", "pcash_ratio", "ev_ebitda", "ev_revenue",
              "debt_to_equity", "current_ratio", "interest_coverage",
-             "quick_ratio", "lt_debt_equity"):
+             "quick_ratio", "lt_debt_equity", "eps_ttm"):
     _COL_MAX[_col] = 99999999.99
+# NUMERIC(12,4)
+for _col in ("price", "open_price", "day_high", "day_low", "prev_close",
+             "week52_high", "week52_low", "ma_50", "ma_200", "ma_20",
+             "book_value", "revenue_per_share", "atr_14",
+             "dcf_value", "graham_number", "nav",
+             "target_mean", "target_high", "target_low"):
+    _COL_MAX[_col] = 99999999.9999
+# NUMERIC(18,2)
+_COL_MAX["turnover"] = 9999999999999999.99
 
 
 def _clamp_numeric(rec: dict) -> dict:
@@ -131,9 +141,20 @@ def upsert_equities(supabase, records: list[dict]):
             ).execute()
             total += len(cleaned)
         except Exception as e:
-            logger.error(
-                f"[UPSERT] 청크 {i + 1}/{len(chunks)} 실패: {e}"
+            logger.warning(
+                f"[UPSERT] 청크 {i + 1}/{len(chunks)} 실패, 개별 레코드 폴백: {e}"
             )
+            # 개별 레코드로 폴백
+            for rec in cleaned:
+                try:
+                    supabase.table("latest_equities").upsert(
+                        [rec], on_conflict="symbol"
+                    ).execute()
+                    total += 1
+                except Exception as e2:
+                    logger.error(
+                        f"[UPSERT] {rec.get('symbol')} 실패: {e2}"
+                    )
 
     logger.info(f"[UPSERT] latest_equities: {total}건 완료")
     return total
