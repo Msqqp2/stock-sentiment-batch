@@ -60,7 +60,7 @@ fun FilterPanel(
     onApply: (FilterCriteria) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(true) }
 
     // 공통
     var marketCapMin by remember(criteria) { mutableStateOf(criteria.marketCapMin?.toString() ?: "") }
@@ -242,7 +242,7 @@ fun FilterPanel(
                         )
                         expanded = false
                     }) {
-                        Text("적용")
+                        Text("검색")
                     }
                 }
                 Spacer(Modifier.height(8.dp))

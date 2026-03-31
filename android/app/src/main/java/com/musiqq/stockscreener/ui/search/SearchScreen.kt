@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,8 +26,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -37,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.musiqq.stockscreener.domain.model.Equity
+import com.musiqq.stockscreener.ui.screener.EquityListItem
 import com.musiqq.stockscreener.ui.theme.StockColors
 import com.musiqq.stockscreener.ui.utils.NumberFormatter
 
@@ -47,7 +51,8 @@ fun SearchScreen(
 ) {
     val query by viewModel.query.collectAsState()
     val results by viewModel.results.collectAsState()
-    val stockColors = StockColors.current
+    val defaultItems by viewModel.defaultItems.collectAsState()
+    val isLoadingDefault by viewModel.isLoadingDefault.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Search input
@@ -70,49 +75,80 @@ fun SearchScreen(
             textStyle = MaterialTheme.typography.bodyLarge,
         )
 
-        if (results.isNotEmpty()) {
-            // Search results
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(results, key = { it.symbol }) { equity ->
-                    SearchResultItem(
-                        equity = equity,
-                        onClick = {
-                            viewModel.clear()
-                            onNavigateToDetail(equity.symbol)
-                        },
-                    )
-                    HorizontalDivider(thickness = 0.5.dp)
+        if (query.length >= 2) {
+            // 검색 모드
+            if (results.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(results, key = { it.symbol }) { equity ->
+                        SearchResultItem(
+                            equity = equity,
+                            onClick = {
+                                viewModel.clear()
+                                onNavigateToDetail(equity.symbol)
+                            },
+                        )
+                        HorizontalDivider(thickness = 0.5.dp)
+                    }
                 }
-            }
-        } else if (query.length >= 2) {
-            // No results
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "검색 결과가 없습니다",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        } else {
-            // Empty state - hint
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Default.TrendingUp,
-                        contentDescription = null,
-                        modifier = Modifier.height(48.dp).width(48.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    )
-                    Spacer(Modifier.height(12.dp))
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text(
-                        text = "종목명 또는 심볼을 입력하세요",
+                        text = "검색 결과가 없습니다",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            }
+        } else {
+            // 기본 종목 리스트
+            val listState = rememberLazyListState()
+            val shouldLoadMore by remember {
+                derivedStateOf {
+                    val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                    lastVisible >= defaultItems.size - 10 && !isLoadingDefault
+                }
+            }
+            LaunchedEffect(shouldLoadMore) {
+                if (shouldLoadMore) viewModel.loadNextDefaultPage()
+            }
+
+            // 컬럼 헤더
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("종목", fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(100.dp))
+                Text("가격", fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(70.dp))
+                Text("등락", fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(60.dp))
+                Text("시총", fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(55.dp))
+                Text("거래량", fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(50.dp))
+                Text("점수", fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(30.dp))
+            }
+            HorizontalDivider()
+
+            LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                itemsIndexed(defaultItems, key = { _, item -> item.symbol }) { index, equity ->
+                    EquityListItem(
+                        equity = equity,
+                        onClick = { onNavigateToDetail(equity.symbol) },
+                    )
+                    if (index < defaultItems.lastIndex) {
+                        HorizontalDivider(thickness = 0.5.dp)
+                    }
+                }
+                if (isLoadingDefault) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
                 }
             }
         }

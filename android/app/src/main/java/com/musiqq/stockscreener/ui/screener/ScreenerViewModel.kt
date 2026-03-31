@@ -41,9 +41,7 @@ class ScreenerViewModel @Inject constructor(
 
     private val pageSize = 50
 
-    init {
-        loadFirstPage()
-    }
+    // 필터 적용 시 로드 — init에서 자동 로드하지 않음
 
     fun loadFirstPage() {
         viewModelScope.launch {
