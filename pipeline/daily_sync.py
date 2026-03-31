@@ -90,8 +90,8 @@ def main():
         # 가격 데이터에서 시총 추정
         priority_list = list(price_data.keys())[:2000]
 
-    # ② yfinance Ticker.info (우선 티커만)
-    info_data = fetch_ticker_info(priority_list)
+    # ② yfinance Ticker.info (우선 티커 중 상위 500만 — 나머지는 enrich_only로)
+    info_data = fetch_ticker_info(priority_list[:500])
     step_timings["② yfinance Info"] = time.time() - t0
 
     # ── 데이터 병합 ──
