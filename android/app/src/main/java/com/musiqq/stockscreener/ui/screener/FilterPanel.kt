@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +51,8 @@ private val ANALYST_RATING_LABELS = mapOf(
     "strong_sell" to "Strong Sell",
 )
 
+private val ETF_ASSET_CLASSES = listOf("Equity", "Fixed Income", "Commodities", "Real Estate", "Currency")
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FilterPanel(
@@ -58,6 +62,7 @@ fun FilterPanel(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    // 공통
     var marketCapMin by remember(criteria) { mutableStateOf(criteria.marketCapMin?.toString() ?: "") }
     var marketCapMax by remember(criteria) { mutableStateOf(criteria.marketCapMax?.toString() ?: "") }
     var peMin by remember(criteria) { mutableStateOf(criteria.peMin?.toString() ?: "") }
@@ -67,8 +72,22 @@ fun FilterPanel(
     var debtMax by remember(criteria) { mutableStateOf(criteria.debtToEquityMax?.toString() ?: "") }
     var revGrowthMin by remember(criteria) { mutableStateOf(criteria.revenueGrowthMin?.toString() ?: "") }
     var targetUpsideMin by remember(criteria) { mutableStateOf(criteria.targetUpsideMin?.toString() ?: "") }
+    var pctFrom52hMin by remember(criteria) { mutableStateOf(criteria.pctFrom52hMin?.toString() ?: "") }
+    var pctFrom52hMax by remember(criteria) { mutableStateOf(criteria.pctFrom52hMax?.toString() ?: "") }
+    var insiderBuy3mMin by remember(criteria) { mutableStateOf(criteria.insiderBuy3mMin?.toString() ?: "") }
+    var shortPctFloatMin by remember(criteria) { mutableStateOf(criteria.shortPctFloatMin?.toString() ?: "") }
+    var shortPctFloatMax by remember(criteria) { mutableStateOf(criteria.shortPctFloatMax?.toString() ?: "") }
     var selectedSectors by remember(criteria) { mutableStateOf(criteria.sectors.toSet()) }
     var selectedRatings by remember(criteria) { mutableStateOf(criteria.analystRatings.toSet()) }
+
+    // ETF 전용
+    var expenseRatioMax by remember(criteria) { mutableStateOf(criteria.expenseRatioMax?.toString() ?: "") }
+    var aumMin by remember(criteria) { mutableStateOf(criteria.aumMin?.toString() ?: "") }
+    var selectedAssetClass by remember(criteria) { mutableStateOf(criteria.assetClass) }
+    var holdingSymbol by remember(criteria) { mutableStateOf(criteria.holdingSymbol ?: "") }
+    var holdingMinWeight by remember(criteria) { mutableStateOf(criteria.holdingMinWeight?.toString() ?: "") }
+
+    val isEtf = criteria.assetType == "etf"
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -82,54 +101,31 @@ fun FilterPanel(
         }
 
         AnimatedVisibility(visible = expanded) {
-            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-                // 시가총액
-                Text("시가총액 (USD)", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterTextField("최소", marketCapMin, { marketCapMin = it }, Modifier.weight(1f))
-                    FilterTextField("최대", marketCapMax, { marketCapMax = it }, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                // ── 밸류에이션 ──
+                FilterSectionHeader("밸류에이션")
 
-                // PER
-                Text("PER", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterTextField("최소", peMin, { peMin = it }, Modifier.weight(1f))
-                    FilterTextField("최대", peMax, { peMax = it }, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(8.dp))
+                FilterRangeRow("시가총액 (USD)", marketCapMin, { marketCapMin = it }, marketCapMax, { marketCapMax = it })
+                FilterRangeRow("PER", peMin, { peMin = it }, peMax, { peMax = it })
 
-                // 배당률 / ROE / 부채비율
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterTextField("배당률 최소", divYieldMin, { divYieldMin = it }, Modifier.weight(1f))
-                    FilterTextField("ROE 최소", roeMin, { roeMin = it }, Modifier.weight(1f))
-                    FilterTextField("D/E 최대", debtMax, { debtMax = it }, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(8.dp))
+                // ── 재무 ──
+                FilterSectionHeader("재무")
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterTextField("매출성장 최소", revGrowthMin, { revGrowthMin = it }, Modifier.weight(1f))
-                    FilterTextField("목표괴리 최소", targetUpsideMin, { targetUpsideMin = it }, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(8.dp))
+                FilterField("배당수익률 최소 (%)", divYieldMin) { divYieldMin = it }
+                FilterField("ROE 최소", roeMin) { roeMin = it }
+                FilterField("D/E (부채비율) 최대", debtMax) { debtMax = it }
+                FilterField("매출성장률 최소", revGrowthMin) { revGrowthMin = it }
 
-                // 섹터
-                Text("섹터", style = MaterialTheme.typography.labelMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SECTORS.forEach { sector ->
-                        FilterChip(
-                            selected = sector in selectedSectors,
-                            onClick = {
-                                selectedSectors = if (sector in selectedSectors) selectedSectors - sector
-                                else selectedSectors + sector
-                            },
-                            label = { Text(sector, fontSize = 10.sp) },
-                        )
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
+                // ── 애널리스트 ──
+                FilterSectionHeader("애널리스트")
 
-                // 투자의견
+                FilterField("목표가 괴리율 최소 (%)", targetUpsideMin) { targetUpsideMin = it }
+
                 Text("투자의견", style = MaterialTheme.typography.labelMedium)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     ANALYST_RATINGS.forEach { rating ->
@@ -143,14 +139,76 @@ fun FilterPanel(
                         )
                     }
                 }
-                Spacer(Modifier.height(8.dp))
 
+                // ── 기술적 ──
+                FilterSectionHeader("기술적 / 모멘텀")
+
+                FilterRangeRow("52주 고점 대비 (%)", pctFrom52hMin, { pctFrom52hMin = it }, pctFrom52hMax, { pctFrom52hMax = it })
+
+                // ── 수급 ──
+                FilterSectionHeader("수급")
+
+                FilterField("내부자 매수 3개월 최소 (건)", insiderBuy3mMin) { insiderBuy3mMin = it }
+                FilterRangeRow("공매도 비율 (%)", shortPctFloatMin, { shortPctFloatMin = it }, shortPctFloatMax, { shortPctFloatMax = it })
+
+                // ── 섹터 ──
+                if (!isEtf) {
+                    FilterSectionHeader("섹터")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SECTORS.forEach { sector ->
+                            FilterChip(
+                                selected = sector in selectedSectors,
+                                onClick = {
+                                    selectedSectors = if (sector in selectedSectors) selectedSectors - sector
+                                    else selectedSectors + sector
+                                },
+                                label = { Text(sector, fontSize = 10.sp) },
+                            )
+                        }
+                    }
+                }
+
+                // ── ETF 전용 ──
+                if (isEtf) {
+                    FilterSectionHeader("ETF")
+
+                    FilterField("보수율 최대 (%)", expenseRatioMax) { expenseRatioMax = it }
+                    FilterField("AUM 최소 (USD)", aumMin) { aumMin = it }
+
+                    Text("자산 유형", style = MaterialTheme.typography.labelMedium)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        ETF_ASSET_CLASSES.forEach { cls ->
+                            FilterChip(
+                                selected = selectedAssetClass == cls,
+                                onClick = {
+                                    selectedAssetClass = if (selectedAssetClass == cls) null else cls
+                                },
+                                label = { Text(cls, fontSize = 10.sp) },
+                            )
+                        }
+                    }
+
+                    Text("보유 종목 역검색", style = MaterialTheme.typography.labelMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterTextField("종목 심볼", holdingSymbol, { holdingSymbol = it }, Modifier.weight(1f), isDecimal = false)
+                        FilterTextField("최소 비중 (%)", holdingMinWeight, { holdingMinWeight = it }, Modifier.weight(1f))
+                    }
+                }
+
+                // ── 버튼 ──
+                Spacer(Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = {
                         marketCapMin = ""; marketCapMax = ""; peMin = ""; peMax = ""
                         divYieldMin = ""; roeMin = ""; debtMax = ""
                         revGrowthMin = ""; targetUpsideMin = ""
+                        pctFrom52hMin = ""; pctFrom52hMax = ""
+                        insiderBuy3mMin = ""
+                        shortPctFloatMin = ""; shortPctFloatMax = ""
                         selectedSectors = emptySet(); selectedRatings = emptySet()
+                        expenseRatioMax = ""; aumMin = ""
+                        selectedAssetClass = null
+                        holdingSymbol = ""; holdingMinWeight = ""
                         onApply(FilterCriteria(assetType = criteria.assetType))
                     }) {
                         Text("초기화")
@@ -168,8 +226,18 @@ fun FilterPanel(
                                 debtToEquityMax = debtMax.toDoubleOrNull(),
                                 revenueGrowthMin = revGrowthMin.toDoubleOrNull(),
                                 targetUpsideMin = targetUpsideMin.toDoubleOrNull(),
+                                pctFrom52hMin = pctFrom52hMin.toDoubleOrNull(),
+                                pctFrom52hMax = pctFrom52hMax.toDoubleOrNull(),
+                                insiderBuy3mMin = insiderBuy3mMin.toIntOrNull(),
+                                shortPctFloatMin = shortPctFloatMin.toDoubleOrNull(),
+                                shortPctFloatMax = shortPctFloatMax.toDoubleOrNull(),
                                 sectors = selectedSectors.toList(),
                                 analystRatings = selectedRatings.toList(),
+                                expenseRatioMax = expenseRatioMax.toDoubleOrNull(),
+                                aumMin = aumMin.toLongOrNull(),
+                                assetClass = selectedAssetClass,
+                                holdingSymbol = holdingSymbol.ifBlank { null },
+                                holdingMinWeight = holdingMinWeight.toDoubleOrNull(),
                             )
                         )
                         expanded = false
@@ -177,7 +245,56 @@ fun FilterPanel(
                         Text("적용")
                     }
                 }
+                Spacer(Modifier.height(8.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun FilterSectionHeader(title: String) {
+    Column {
+        HorizontalDivider(thickness = 0.5.dp)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 13.sp,
+        )
+    }
+}
+
+@Composable
+private fun FilterField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, fontSize = 10.sp) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        modifier = Modifier.fillMaxWidth(),
+        textStyle = MaterialTheme.typography.bodySmall,
+    )
+}
+
+@Composable
+private fun FilterRangeRow(
+    label: String,
+    minValue: String,
+    onMinChange: (String) -> Unit,
+    maxValue: String,
+    onMaxChange: (String) -> Unit,
+) {
+    Column {
+        Text(label, style = MaterialTheme.typography.labelMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterTextField("최소", minValue, onMinChange, Modifier.weight(1f))
+            FilterTextField("최대", maxValue, onMaxChange, Modifier.weight(1f))
         }
     }
 }
@@ -188,13 +305,16 @@ private fun FilterTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    isDecimal: Boolean = true,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label, fontSize = 10.sp) },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Text,
+        ),
         modifier = modifier,
         textStyle = MaterialTheme.typography.bodySmall,
     )
