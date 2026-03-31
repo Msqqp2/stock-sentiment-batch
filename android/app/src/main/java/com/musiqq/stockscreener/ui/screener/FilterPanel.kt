@@ -107,52 +107,48 @@ fun FilterPanel(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // ── 밸류에이션 ──
-                FilterSectionHeader("밸류에이션")
-
-                FilterRangeRow("시가총액 (USD)", marketCapMin, { marketCapMin = it }, marketCapMax, { marketCapMax = it })
-                FilterRangeRow("PER", peMin, { peMin = it }, peMax, { peMax = it })
-
-                // ── 재무 ──
-                FilterSectionHeader("재무")
-
-                FilterField("배당수익률 최소 (%)", divYieldMin) { divYieldMin = it }
-                FilterField("ROE 최소", roeMin) { roeMin = it }
-                FilterField("D/E (부채비율) 최대", debtMax) { debtMax = it }
-                FilterField("매출성장률 최소", revGrowthMin) { revGrowthMin = it }
-
-                // ── 애널리스트 ──
-                FilterSectionHeader("애널리스트")
-
-                FilterField("목표가 괴리율 최소 (%)", targetUpsideMin) { targetUpsideMin = it }
-
-                Text("투자의견", style = MaterialTheme.typography.labelMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    ANALYST_RATINGS.forEach { rating ->
-                        FilterChip(
-                            selected = rating in selectedRatings,
-                            onClick = {
-                                selectedRatings = if (rating in selectedRatings) selectedRatings - rating
-                                else selectedRatings + rating
-                            },
-                            label = { Text(ANALYST_RATING_LABELS[rating] ?: rating, fontSize = 10.sp) },
-                        )
-                    }
-                }
-
-                // ── 기술적 ──
-                FilterSectionHeader("기술적 / 모멘텀")
-
-                FilterRangeRow("52주 고점 대비 (%)", pctFrom52hMin, { pctFrom52hMin = it }, pctFrom52hMax, { pctFrom52hMax = it })
-
-                // ── 수급 ──
-                FilterSectionHeader("수급")
-
-                FilterField("내부자 매수 3개월 최소 (건)", insiderBuy3mMin) { insiderBuy3mMin = it }
-                FilterRangeRow("공매도 비율 (%)", shortPctFloatMin, { shortPctFloatMin = it }, shortPctFloatMax, { shortPctFloatMax = it })
-
-                // ── 섹터 ──
                 if (!isEtf) {
+                    // ═══════════ Stock 조건 ═══════════
+
+                    // ── 밸류에이션 ──
+                    FilterSectionHeader("밸류에이션")
+                    FilterRangeRow("시가총액 (USD)", marketCapMin, { marketCapMin = it }, marketCapMax, { marketCapMax = it })
+                    FilterRangeRow("PER", peMin, { peMin = it }, peMax, { peMax = it })
+
+                    // ── 재무 ──
+                    FilterSectionHeader("재무")
+                    FilterField("배당수익률 최소 (%)", divYieldMin) { divYieldMin = it }
+                    FilterField("ROE 최소", roeMin) { roeMin = it }
+                    FilterField("D/E (부채비율) 최대", debtMax) { debtMax = it }
+                    FilterField("매출성장률 최소", revGrowthMin) { revGrowthMin = it }
+
+                    // ── 애널리스트 ──
+                    FilterSectionHeader("애널리스트")
+                    FilterField("목표가 괴리율 최소 (%)", targetUpsideMin) { targetUpsideMin = it }
+                    Text("투자의견", style = MaterialTheme.typography.labelMedium)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        ANALYST_RATINGS.forEach { rating ->
+                            FilterChip(
+                                selected = rating in selectedRatings,
+                                onClick = {
+                                    selectedRatings = if (rating in selectedRatings) selectedRatings - rating
+                                    else selectedRatings + rating
+                                },
+                                label = { Text(ANALYST_RATING_LABELS[rating] ?: rating, fontSize = 10.sp) },
+                            )
+                        }
+                    }
+
+                    // ── 기술적 ──
+                    FilterSectionHeader("기술적 / 모멘텀")
+                    FilterRangeRow("52주 고점 대비 (%)", pctFrom52hMin, { pctFrom52hMin = it }, pctFrom52hMax, { pctFrom52hMax = it })
+
+                    // ── 수급 ──
+                    FilterSectionHeader("수급")
+                    FilterField("내부자 매수 3개월 최소 (건)", insiderBuy3mMin) { insiderBuy3mMin = it }
+                    FilterRangeRow("공매도 비율 (%)", shortPctFloatMin, { shortPctFloatMin = it }, shortPctFloatMax, { shortPctFloatMax = it })
+
+                    // ── 섹터 ──
                     FilterSectionHeader("섹터")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         SECTORS.forEach { sector ->
@@ -166,16 +162,17 @@ fun FilterPanel(
                             )
                         }
                     }
-                }
+                } else {
+                    // ═══════════ ETF 조건 ═══════════
 
-                // ── ETF 전용 ──
-                if (isEtf) {
-                    FilterSectionHeader("ETF")
-
-                    FilterField("보수율 최대 (%)", expenseRatioMax) { expenseRatioMax = it }
+                    // ── 기본 ──
+                    FilterSectionHeader("ETF 기본")
                     FilterField("AUM 최소 (USD)", aumMin) { aumMin = it }
+                    FilterField("보수율 최대 (%)", expenseRatioMax) { expenseRatioMax = it }
+                    FilterField("배당수익률 최소 (%)", divYieldMin) { divYieldMin = it }
 
-                    Text("자산 유형", style = MaterialTheme.typography.labelMedium)
+                    // ── 자산 유형 ──
+                    FilterSectionHeader("자산 유형")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         ETF_ASSET_CLASSES.forEach { cls ->
                             FilterChip(
@@ -188,14 +185,19 @@ fun FilterPanel(
                         }
                     }
 
-                    Text("보유 종목 역검색", style = MaterialTheme.typography.labelMedium)
+                    // ── 기술적 ──
+                    FilterSectionHeader("기술적 / 모멘텀")
+                    FilterRangeRow("52주 고점 대비 (%)", pctFrom52hMin, { pctFrom52hMin = it }, pctFrom52hMax, { pctFrom52hMax = it })
+
+                    // ── 보유 종목 역검색 ──
+                    FilterSectionHeader("보유 종목 역검색")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterTextField("종목 심볼", holdingSymbol, { holdingSymbol = it }, Modifier.weight(1f), isDecimal = false)
                         FilterTextField("최소 비중 (%)", holdingMinWeight, { holdingMinWeight = it }, Modifier.weight(1f))
                     }
                 }
 
-                // ── 버튼 ──
+                // ── 버튼 (공통) ──
                 Spacer(Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = {
@@ -215,8 +217,10 @@ fun FilterPanel(
                     }
                     Spacer(Modifier.weight(1f))
                     Button(onClick = {
-                        onApply(
-                            criteria.copy(
+                        val applied = if (!isEtf) {
+                            // Stock: Stock 전용 필드만 전달
+                            FilterCriteria(
+                                assetType = "stock",
                                 marketCapMin = marketCapMin.toLongOrNull(),
                                 marketCapMax = marketCapMax.toLongOrNull(),
                                 peMin = peMin.toDoubleOrNull(),
@@ -233,13 +237,26 @@ fun FilterPanel(
                                 shortPctFloatMax = shortPctFloatMax.toDoubleOrNull(),
                                 sectors = selectedSectors.toList(),
                                 analystRatings = selectedRatings.toList(),
+                                orderBy = criteria.orderBy,
+                                orderDesc = criteria.orderDesc,
+                            )
+                        } else {
+                            // ETF: ETF 전용 필드만 전달
+                            FilterCriteria(
+                                assetType = "etf",
+                                dividendYieldMin = divYieldMin.toDoubleOrNull(),
+                                pctFrom52hMin = pctFrom52hMin.toDoubleOrNull(),
+                                pctFrom52hMax = pctFrom52hMax.toDoubleOrNull(),
                                 expenseRatioMax = expenseRatioMax.toDoubleOrNull(),
                                 aumMin = aumMin.toLongOrNull(),
                                 assetClass = selectedAssetClass,
                                 holdingSymbol = holdingSymbol.ifBlank { null },
                                 holdingMinWeight = holdingMinWeight.toDoubleOrNull(),
+                                orderBy = criteria.orderBy,
+                                orderDesc = criteria.orderDesc,
                             )
-                        )
+                        }
+                        onApply(applied)
                         expanded = false
                     }) {
                         Text("검색")

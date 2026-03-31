@@ -114,10 +114,12 @@ class ScreenerViewModel @Inject constructor(
 
     fun switchAssetType(type: String) {
         _uiState.value = _uiState.value.copy(
-            criteria = _uiState.value.criteria.copy(assetType = type),
+            criteria = FilterCriteria(assetType = type),
             activePreset = null,
+            items = emptyList(),
+            hasMore = true,
+            page = 0,
         )
-        loadFirstPage()
     }
 
     private fun loadFirstPageWithOverrides(overrideFilters: Map<String, String>?) {
