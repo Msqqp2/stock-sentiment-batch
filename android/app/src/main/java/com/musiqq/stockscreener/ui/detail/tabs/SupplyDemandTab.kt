@@ -15,7 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import com.musiqq.stockscreener.ui.theme.Pretendard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,7 +65,7 @@ fun SupplyDemandTab(equity: Equity, insiderTrades: List<InsiderTradeDto>) {
                         Text(
                             text = trade.filingDate,
                             fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = Pretendard,
                             modifier = Modifier.weight(0.25f),
                         )
                         Text(
@@ -84,7 +84,7 @@ fun SupplyDemandTab(equity: Equity, insiderTrades: List<InsiderTradeDto>) {
                         Text(
                             text = NumberFormatter.formatVolume(trade.shares),
                             fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = Pretendard,
                             modifier = Modifier.weight(0.2f),
                         )
                     }

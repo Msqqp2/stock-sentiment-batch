@@ -22,7 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import com.musiqq.stockscreener.ui.theme.Pretendard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,7 +73,7 @@ fun SearchBar(
                             Text(
                                 text = equity.symbol,
                                 fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = Pretendard,
                                 fontSize = 13.sp,
                                 modifier = Modifier.weight(0.25f),
                             )
@@ -87,7 +87,7 @@ fun SearchBar(
                             Text(
                                 text = NumberFormatter.formatMarketCap(equity.marketCap),
                                 fontSize = 11.sp,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = Pretendard,
                                 modifier = Modifier.weight(0.25f),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

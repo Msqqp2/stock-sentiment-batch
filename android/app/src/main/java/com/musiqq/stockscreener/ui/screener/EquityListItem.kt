@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import com.musiqq.stockscreener.ui.theme.Pretendard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,7 +47,7 @@ fun EquityListItem(
                 text = equity.symbol,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = Pretendard,
                 maxLines = 1,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -64,7 +64,7 @@ fun EquityListItem(
         Text(
             text = NumberFormatter.formatPrice(equity.price),
             fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = Pretendard,
             modifier = Modifier.width(70.dp),
             maxLines = 1,
         )
@@ -80,7 +80,7 @@ fun EquityListItem(
         Text(
             text = NumberFormatter.formatChangePct(changePct),
             fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = Pretendard,
             color = changeColor,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.width(60.dp),
@@ -91,7 +91,7 @@ fun EquityListItem(
         Text(
             text = NumberFormatter.formatMarketCap(equity.marketCap),
             fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = Pretendard,
             modifier = Modifier.width(55.dp),
             maxLines = 1,
         )
@@ -100,7 +100,7 @@ fun EquityListItem(
         Text(
             text = NumberFormatter.formatVolume(equity.volume),
             fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = Pretendard,
             modifier = Modifier.width(50.dp),
             maxLines = 1,
         )
@@ -110,7 +110,7 @@ fun EquityListItem(
         Text(
             text = NumberFormatter.formatScore(score),
             fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = Pretendard,
             fontWeight = FontWeight.Bold,
             color = when {
                 score == null -> MaterialTheme.colorScheme.onSurfaceVariant

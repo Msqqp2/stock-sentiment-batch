@@ -33,7 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import com.musiqq.stockscreener.ui.theme.Pretendard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -183,7 +183,7 @@ private fun SearchResultItem(
                     text = equity.symbol,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = Pretendard,
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -206,13 +206,13 @@ private fun SearchResultItem(
             Text(
                 text = NumberFormatter.formatPrice(equity.price),
                 fontSize = 14.sp,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = Pretendard,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
                 text = NumberFormatter.formatChangePct(changePct),
                 fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = Pretendard,
                 color = changeColor,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -225,14 +225,14 @@ private fun SearchResultItem(
             Text(
                 text = NumberFormatter.formatMarketCap(equity.marketCap),
                 fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = Pretendard,
             )
             val score = equity.scoreTotal
             if (score != null) {
                 Text(
                     text = "S:${NumberFormatter.formatScore(score)}",
                     fontSize = 11.sp,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = Pretendard,
                     fontWeight = FontWeight.Bold,
                     color = when {
                         score >= 80 -> stockColors.up

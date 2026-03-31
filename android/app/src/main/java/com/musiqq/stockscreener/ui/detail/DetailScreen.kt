@@ -29,7 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import com.musiqq.stockscreener.ui.theme.Pretendard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,12 +62,12 @@ fun DetailScreen(
                 val equity = state.equity
                 if (equity != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(equity.symbol, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                        Text(equity.symbol, fontWeight = FontWeight.Bold, fontFamily = Pretendard)
                         Spacer(Modifier.width(8.dp))
                         Text(
                             text = NumberFormatter.formatPrice(equity.price),
                             fontSize = 16.sp,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = Pretendard,
                         )
                         Spacer(Modifier.width(4.dp))
                         val changePct = equity.changePct
@@ -80,7 +80,7 @@ fun DetailScreen(
                         Text(
                             text = NumberFormatter.formatChangePct(changePct),
                             fontSize = 14.sp,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = Pretendard,
                             color = color,
                             fontWeight = FontWeight.SemiBold,
                         )

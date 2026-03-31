@@ -22,7 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import com.musiqq.stockscreener.ui.theme.Pretendard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -129,7 +129,7 @@ fun DataRow(label: String, value: String) {
         Text(
             text = value,
             fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = Pretendard,
             fontWeight = FontWeight.Medium,
         )
     }
@@ -151,7 +151,7 @@ fun DataRow(label: String, value: String) {
                 Text(
                     tooltip.formula,
                     fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = Pretendard,
                     lineHeight = 18.sp,
                 )
             },
