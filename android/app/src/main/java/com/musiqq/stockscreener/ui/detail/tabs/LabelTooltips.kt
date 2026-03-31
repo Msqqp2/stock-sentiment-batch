@@ -31,11 +31,29 @@ val LABEL_TOOLTIPS = mapOf(
     "상대거래량" to LabelTooltip("Relative Volume", "Today's Volume / 20-Day Average Volume"),
 
     // ── 개요 > 종합 스코어 ──
-    "밸류" to LabelTooltip("Value Score", "Composite: PE, PB, PS, FCF Yield percentile ranks (0-100)"),
-    "퀄리티" to LabelTooltip("Quality Score", "Composite: normalized ROE, ROA, Operating Margin (0-100)"),
-    "모멘텀" to LabelTooltip("Momentum Score", "Composite: RSI, price performance percentile ranks (0-100)"),
-    "성장" to LabelTooltip("Growth Score", "Composite: Revenue growth, Earnings growth percentile ranks (0-100)"),
-    "종합" to LabelTooltip("Total Score", "Weighted average of Value, Quality, Momentum, Growth (0-100)"),
+    "밸류" to LabelTooltip("Value Score (0-100)", """Percentile rank of avg(-PE, -PB, -PS, -EV/EBITDA)
+Lower valuation → higher score
+Filters: 0<PE<500, 0<PB<100, 0<PS<100, 0<EV/EBITDA<200
+Source: yfinance → daily_sync pipeline (KST 07:00, weekdays)"""),
+    "퀄리티" to LabelTooltip("Quality Score (0-100)", """Percentile rank of avg(norm_ROE, norm_ROA, norm_Margin, norm_CR)
+ROE: clamp((roe+0.5)/1.0, 0, 1)
+ROA: clamp((roa+0.2)/0.4, 0, 1)
+OpMargin: clamp((margin+0.3)/0.8, 0, 1)
+CurrentRatio: min(CR/3, 1)
+Source: yfinance → daily_sync pipeline (KST 07:00, weekdays)"""),
+    "모멘텀" to LabelTooltip("Momentum Score (0-100)", """Percentile rank of avg(change/10, pct52h/50+1, relVol/3, rsi/100)
+change_pct: daily price change %
+pct_from_52h: distance from 52-week high
+relative_volume: today vol / 20d avg vol
+rsi_14: Wilder's RSI
+Source: yfinance → daily_sync pipeline (KST 07:00, weekdays)"""),
+    "성장" to LabelTooltip("Growth Score (0-100)", """Percentile rank of avg(rev_growth, earn_growth, op_income_growth)
+All YoY growth rates
+Source: yfinance → daily_sync pipeline (KST 07:00, weekdays)"""),
+    "종합" to LabelTooltip("Total Score (0-100)", """Simple average of 4 sub-scores (25% each)
+= (Value + Quality + Momentum + Growth) / 4
+Null sub-scores are excluded from average
+Source: daily_sync pipeline (KST 07:00, weekdays)"""),
 
     // ── 재무 > 수익성 ──
     "ROE" to LabelTooltip("Return on Equity", "Net Income / Shareholders' Equity"),

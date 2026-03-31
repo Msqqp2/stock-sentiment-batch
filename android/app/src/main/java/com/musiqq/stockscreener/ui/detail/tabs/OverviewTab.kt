@@ -2,6 +2,7 @@ package com.musiqq.stockscreener.ui.detail.tabs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,13 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -109,57 +110,56 @@ fun DataRow(label: String, value: String) {
     val tooltip = LABEL_TOOLTIPS[label]
     var showTooltip by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
-    ) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = if (tooltip != null) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+    Box {
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .then(
-                    if (tooltip != null) Modifier.clickable { showTooltip = true }
-                    else Modifier,
-                ),
-        )
-        Text(
-            text = value,
-            fontSize = 12.sp,
-            fontFamily = Pretendard,
-            fontWeight = FontWeight.Medium,
-        )
-    }
+                .fillMaxWidth()
+                .padding(vertical = 2.dp),
+        ) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = if (tooltip != null) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (tooltip != null) Modifier.clickable { showTooltip = true }
+                        else Modifier,
+                    ),
+            )
+            Text(
+                text = value,
+                fontSize = 12.sp,
+                fontFamily = Pretendard,
+                fontWeight = FontWeight.Medium,
+            )
+        }
 
-    if (showTooltip && tooltip != null) {
-        AlertDialog(
-            onDismissRequest = { showTooltip = false },
-            title = {
-                Column {
-                    Text(label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        if (showTooltip && tooltip != null) {
+            DropdownMenu(
+                expanded = true,
+                onDismissRequest = { showTooltip = false },
+                modifier = Modifier.widthIn(max = 280.dp),
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    Text(label, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Text(
                         tooltip.english,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        tooltip.formula,
+                        fontSize = 11.sp,
+                        fontFamily = Pretendard,
+                        lineHeight = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            },
-            text = {
-                Text(
-                    tooltip.formula,
-                    fontSize = 12.sp,
-                    fontFamily = Pretendard,
-                    lineHeight = 18.sp,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showTooltip = false }) {
-                    Text("닫기")
-                }
-            },
-        )
+            }
+        }
     }
 }
