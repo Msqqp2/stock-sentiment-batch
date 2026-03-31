@@ -22,8 +22,11 @@ data class StockColors(
     val cardAlt: Color,
     val border: Color,
     val textSecondary: Color,
+    val textTertiary: Color,
     val badgeBuy: Color,
     val badgeSell: Color,
+    val navSelected: Color,
+    val navUnselected: Color,
 ) {
     companion object {
         val current: StockColors
@@ -40,8 +43,11 @@ val LocalStockColors = staticCompositionLocalOf {
         cardAlt = Dark_CardAlt,
         border = Dark_Border,
         textSecondary = Dark_TextSecondary,
+        textTertiary = Dark_TextSecondary,
         badgeBuy = Dark_BadgeBuy,
         badgeSell = Dark_BadgeSell,
+        navSelected = Dark_TextPrimary,
+        navUnselected = Dark_TextSecondary,
     )
 }
 
@@ -57,12 +63,16 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     surface = Light_Surface,
-    background = Light_Surface,
+    background = Light_Background,
     onSurface = Light_TextPrimary,
     onBackground = Light_TextPrimary,
     primary = Light_Accent,
-    surfaceVariant = Light_Card,
+    surfaceVariant = Light_Surface,
     onSurfaceVariant = Light_TextSecondary,
+    outline = Light_Border,
+    surfaceContainerLowest = Light_Surface,
+    surfaceContainer = Light_Background,
+    surfaceContainerHigh = Light_Surface,
 )
 
 @Composable
@@ -84,8 +94,11 @@ fun StockScreenerTheme(
             cardAlt = Dark_CardAlt,
             border = Dark_Border,
             textSecondary = Dark_TextSecondary,
+            textTertiary = Dark_TextSecondary,
             badgeBuy = Dark_BadgeBuy,
             badgeSell = Dark_BadgeSell,
+            navSelected = Dark_TextPrimary,
+            navUnselected = Dark_TextSecondary,
         )
     } else {
         StockColors(
@@ -94,8 +107,11 @@ fun StockScreenerTheme(
             cardAlt = Light_CardAlt,
             border = Light_Border,
             textSecondary = Light_TextSecondary,
+            textTertiary = Light_TextTertiary,
             badgeBuy = Light_BadgeBuy,
             badgeSell = Light_BadgeSell,
+            navSelected = Light_NavSelected,
+            navUnselected = Light_NavUnselected,
         )
     }
 
@@ -103,7 +119,7 @@ fun StockScreenerTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.surface.toArgb()
+            window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view)
                 .isAppearanceLightStatusBars = !darkTheme
         }
