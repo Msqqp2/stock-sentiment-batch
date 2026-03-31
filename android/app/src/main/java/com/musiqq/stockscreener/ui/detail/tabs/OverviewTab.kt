@@ -1,5 +1,6 @@
 package com.musiqq.stockscreener.ui.detail.tabs
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,10 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -99,6 +106,9 @@ fun SectionCard(title: String, content: @Composable () -> Unit) {
 
 @Composable
 fun DataRow(label: String, value: String) {
+    val tooltip = LABEL_TOOLTIPS[label]
+    var showTooltip by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,14 +117,49 @@ fun DataRow(label: String, value: String) {
         Text(
             text = label,
             fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
+            color = if (tooltip != null) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    if (tooltip != null) Modifier.clickable { showTooltip = true }
+                    else Modifier,
+                ),
         )
         Text(
             text = value,
             fontSize = 12.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Medium,
+        )
+    }
+
+    if (showTooltip && tooltip != null) {
+        AlertDialog(
+            onDismissRequest = { showTooltip = false },
+            title = {
+                Column {
+                    Text(label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        tooltip.english,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
+            text = {
+                Text(
+                    tooltip.formula,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    lineHeight = 18.sp,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showTooltip = false }) {
+                    Text("닫기")
+                }
+            },
         )
     }
 }
