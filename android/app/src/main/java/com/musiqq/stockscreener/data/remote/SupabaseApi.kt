@@ -21,7 +21,7 @@ interface SupabaseApi {
     @GET("rest/v1/latest_equities")
     suspend fun searchEquities(
         @Query("or") query: String,
-        @Query("select") select: String = "symbol,name,asset_type,price,market_cap,change_pct",
+        @Query("select") select: String = "symbol,name,asset_type,price,market_cap,change_pct,score_total,sector,volume",
         @Query("is_delisted") isDelisted: String = "eq.false",
         @Query("order") order: String = "market_cap.desc.nullslast",
         @Query("limit") limit: Int = 10,
