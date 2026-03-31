@@ -111,6 +111,15 @@ def fetch_bulk_prices(symbols: list[str]) -> dict[str, dict]:
                 if df.empty:
                     break
 
+                # 실제 거래일 추출 (yfinance index)
+                trade_date = None
+                if not df.empty:
+                    idx = df.index[-1]
+                    if hasattr(idx, "date"):
+                        trade_date = idx.date().isoformat()
+                    else:
+                        trade_date = str(idx)[:10]
+
                 # MultiIndex인 경우 (여러 종목)
                 if isinstance(df.columns, pd.MultiIndex):
                     for sym in chunk:
@@ -125,6 +134,7 @@ def fetch_bulk_prices(symbols: list[str]) -> dict[str, dict]:
                                         "day_high": _safe_float(last.get("High")),
                                         "day_low": _safe_float(last.get("Low")),
                                         "volume": _safe_int(last.get("Volume")),
+                                        "data_date": trade_date,
                                     }
                         except Exception:
                             pass
@@ -138,6 +148,7 @@ def fetch_bulk_prices(symbols: list[str]) -> dict[str, dict]:
                             "day_high": _safe_float(last.get("High")),
                             "day_low": _safe_float(last.get("Low")),
                             "volume": _safe_int(last.get("Volume")),
+                            "data_date": trade_date,
                         }
                 break  # 성공 시 루프 탈출
             except Exception as e:

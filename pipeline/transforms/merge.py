@@ -23,13 +23,15 @@ def merge_universe_with_prices(
 
     for item in universe:
         sym = item["symbol"]
+        # yfinance 가격 데이터에서 실제 거래일 추출 (없으면 오늘 날짜)
+        yf_date = price_data.get(sym, {}).get("data_date")
         record = {
             "symbol": sym,
             "name": item.get("name", ""),
             "asset_type": item.get("asset_type", "stock"),
             "exchange": item.get("exchange", ""),
             "is_delisted": False,
-            "data_date": today,
+            "data_date": yf_date or today,
         }
 
         # yfinance 가격 데이터 (하위 우선순위)
