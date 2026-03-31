@@ -227,28 +227,34 @@ def fetch_price_history(
     ]
 
     for i, chunk in enumerate(chunks):
-        try:
-            df = yf.download(
-                chunk, period=period, threads=True, progress=False, ignore_tz=True
-            )
-            if df.empty:
-                continue
+        for attempt in range(YFINANCE_MAX_RETRIES):
+            try:
+                df = yf.download(
+                    chunk, period=period, threads=True, progress=False, ignore_tz=True
+                )
+                if df.empty:
+                    break
 
-            if isinstance(df.columns, pd.MultiIndex):
-                for sym in chunk:
-                    try:
-                        if sym in df.columns.get_level_values(1):
-                            sym_df = df.xs(sym, level=1, axis=1).dropna()
-                            if len(sym_df) >= 20:
-                                results[sym] = sym_df
-                    except Exception:
-                        pass
-            else:
-                if len(chunk) == 1 and len(df) >= 20:
-                    results[chunk[0]] = df.dropna()
-
-        except Exception as e:
-            logger.warning(f"[yfinance] 히스토리 chunk {i + 1} 실패: {e}")
+                if isinstance(df.columns, pd.MultiIndex):
+                    for sym in chunk:
+                        try:
+                            if sym in df.columns.get_level_values(1):
+                                sym_df = df.xs(sym, level=1, axis=1).dropna()
+                                if len(sym_df) >= 20:
+                                    results[sym] = sym_df
+                        except Exception:
+                            pass
+                else:
+                    if len(chunk) == 1 and len(df) >= 20:
+                        results[chunk[0]] = df.dropna()
+                break  # 성공 시 루프 탈출
+            except Exception as e:
+                logger.warning(
+                    f"[yfinance] 히스토리 chunk {i + 1} 실패 "
+                    f"(attempt {attempt + 1}): {e}"
+                )
+                if attempt < YFINANCE_MAX_RETRIES - 1:
+                    time.sleep(YFINANCE_RETRY_BACKOFF)
 
         if (i + 1) % 10 == 0 or i == len(chunks) - 1:
             logger.info(

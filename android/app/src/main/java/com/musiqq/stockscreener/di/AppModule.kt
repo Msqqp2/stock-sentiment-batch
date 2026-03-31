@@ -63,6 +63,7 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(context, AppDatabase::class.java, "stockscreener.db")
+            .fallbackToDestructiveMigration()
             .build()
     }
 

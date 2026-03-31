@@ -1,6 +1,8 @@
 package com.musiqq.stockscreener.ui.heatmap
 
 import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -44,6 +46,8 @@ fun HeatMapScreen(
             else -> {
                 val jsonData = viewModel.toJsonForWebView()
 
+                val mainHandler = Handler(Looper.getMainLooper())
+
                 AndroidView(
                     factory = { context ->
                         WebView(context).apply {
@@ -55,7 +59,7 @@ fun HeatMapScreen(
                                 object {
                                     @JavascriptInterface
                                     fun onSymbolClick(symbol: String) {
-                                        onNavigateToDetail(symbol)
+                                        mainHandler.post { onNavigateToDetail(symbol) }
                                     }
 
                                     @JavascriptInterface
@@ -67,6 +71,7 @@ fun HeatMapScreen(
                             loadUrl("file:///android_asset/heatmap.html")
                         }
                     },
+                    onRelease = { webView -> webView.destroy() },
                     modifier = Modifier.fillMaxSize(),
                 )
             }

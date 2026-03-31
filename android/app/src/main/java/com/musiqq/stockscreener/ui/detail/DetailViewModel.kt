@@ -65,15 +65,28 @@ class DetailViewModel @Inject constructor(
         }
     }
 
+    private var watchlistToggling = false
+
     fun toggleWatchlist() {
         val eq = _uiState.value.equity ?: return
+        if (watchlistToggling) return
+        watchlistToggling = true
+        val wasWatchlisted = _uiState.value.isWatchlisted
+        // 즉시 UI 반영
+        _uiState.value = _uiState.value.copy(isWatchlisted = !wasWatchlisted)
         viewModelScope.launch {
-            if (_uiState.value.isWatchlisted) {
-                watchlistRepository.remove(eq.symbol)
-            } else {
-                watchlistRepository.add(eq.symbol, eq.name, eq.assetType)
+            try {
+                if (wasWatchlisted) {
+                    watchlistRepository.remove(eq.symbol)
+                } else {
+                    watchlistRepository.add(eq.symbol, eq.name, eq.assetType)
+                }
+            } catch (_: Exception) {
+                // 실패 시 롤백
+                _uiState.value = _uiState.value.copy(isWatchlisted = wasWatchlisted)
+            } finally {
+                watchlistToggling = false
             }
-            _uiState.value = _uiState.value.copy(isWatchlisted = !_uiState.value.isWatchlisted)
         }
     }
 

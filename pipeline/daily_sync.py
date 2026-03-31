@@ -40,7 +40,9 @@ from pipeline.sources.yfinance_bulk import (
     fetch_ticker_info,
 )
 from pipeline.transforms.compute import compute_derived_fields
+from pipeline.transforms.deep_financials import batch_deep_financials
 from pipeline.transforms.freshness import compute_freshness_dates
+from pipeline.transforms.insider_agg import aggregate_insider_trades
 from pipeline.transforms.merge import merge_universe_with_prices
 from pipeline.transforms.scoring import compute_scores
 from pipeline.transforms.technicals import compute_performance, compute_technicals
@@ -89,8 +91,10 @@ def main():
         logger.info("[Priority] DB 비어있음 — 시총 상위 2000개로 대체")
         # 가격 데이터에서 시총 추정
         priority_list = list(price_data.keys())[:2000]
+    step_timings["② Priority 빌드"] = time.time() - t0
 
     # ② yfinance Ticker.info (우선 티커 중 상위 500만 — 나머지는 enrich_only로)
+    t0 = time.time()
     info_data = fetch_ticker_info(priority_list[:500])
     step_timings["② yfinance Info"] = time.time() - t0
 
@@ -138,7 +142,6 @@ def main():
         r["symbol"] for r in stocks_with_mcap[:DEEP_FINANCIAL_TOP_N]
     ]
 
-    from pipeline.transforms.deep_financials import batch_deep_financials
     deep_data = batch_deep_financials(top_500_symbols)
     for d in deep_data:
         rec = symbol_to_record.get(d["symbol"])
@@ -154,6 +157,18 @@ def main():
 
     # ── UPSERT ──
     t0 = time.time()
+    # UPSERT 전 기존 건수 조회 (sanity check용)
+    try:
+        prev_total = (
+            supabase.table("latest_equities")
+            .select("symbol", count="exact")
+            .eq("is_delisted", False)
+            .execute()
+        )
+        prev_count = prev_total.count or 0
+    except Exception:
+        prev_count = None
+
     cleanup_fmp_cache(supabase)
     upsert_count = upsert_equities(supabase, records)
     mark_delisted(supabase, active_symbols)
@@ -181,7 +196,6 @@ def main():
         upsert_insider_trades(supabase, trades)
 
         # 집계
-        from pipeline.transforms.insider_agg import aggregate_insider_trades
         agg = aggregate_insider_trades(trades)
         update_insider_aggregates(supabase, agg)
 
@@ -234,7 +248,7 @@ def main():
 
     # ── Sanity Check ──
     t0 = time.time()
-    check_result = run_sanity_checks(supabase, prev_count=None)
+    check_result = run_sanity_checks(supabase, prev_count=prev_count)
     step_timings["Sanity Check"] = time.time() - t0
 
     if not check_result.passed:

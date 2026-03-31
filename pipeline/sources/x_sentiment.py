@@ -4,7 +4,7 @@ Nice-to-Have 등급 — 장애 시 핵심 기능 무영향.
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import requests
 
@@ -17,7 +17,10 @@ from pipeline.config import (
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {"X-API-Key": X_SENTIMENT_KEY}
+
+def _headers():
+    """런타임에 HEADERS 생성 (dotenv 로딩 후 키를 읽기 위해)."""
+    return {"X-API-Key": X_SENTIMENT_KEY}
 
 
 def check_api_health() -> bool:
@@ -29,7 +32,7 @@ def check_api_health() -> bool:
     try:
         resp = requests.get(
             f"{X_SENTIMENT_BASE}/trending",
-            headers=HEADERS,
+            headers=_headers(),
             timeout=X_SENTIMENT_HEALTH_TIMEOUT,
         )
         if resp.status_code == 200:
@@ -57,7 +60,7 @@ def get_stock_sentiment(ticker: str) -> dict | None:
     try:
         resp = requests.get(
             f"{X_SENTIMENT_BASE}/stock/{ticker}",
-            headers=HEADERS,
+            headers=_headers(),
             timeout=10,
         )
         resp.raise_for_status()
@@ -151,7 +154,7 @@ def _set_consecutive_failures(supabase, count: int):
             "symbol": "_META_",
             "endpoint": "x_sentiment_health",
             "response_json": {"consecutive_failures": count},
-            "fetched_at": datetime.utcnow().isoformat(),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
         },
         on_conflict="symbol,endpoint",
     ).execute()

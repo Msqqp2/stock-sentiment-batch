@@ -2,6 +2,7 @@ package com.musiqq.stockscreener.domain.model
 
 import com.musiqq.stockscreener.data.remote.dto.EquityDto
 
+@Suppress("unused")
 data class Equity(
     val symbol: String,
     val name: String,

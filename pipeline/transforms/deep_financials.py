@@ -4,6 +4,7 @@ yfinance 재무제표 직접 파싱.
 """
 
 import logging
+import math
 import time
 
 import yfinance as yf
@@ -28,11 +29,23 @@ def compute_deep_financials(symbol: str) -> dict | None:
 
         result = {"symbol": symbol}
 
+        def _safe(val):
+            """NaN/Inf를 None으로 변환."""
+            if val is None:
+                return None
+            try:
+                f = float(val)
+                if math.isnan(f) or math.isinf(f):
+                    return None
+                return f
+            except (ValueError, TypeError):
+                return None
+
         # 영업이익 증가율 (YoY)
         if "Operating Income" in qi.index and qi.shape[1] >= 5:
-            current = qi.loc["Operating Income"].iloc[0]
-            yoy = qi.loc["Operating Income"].iloc[4]
-            if yoy and abs(yoy) > 0:
+            current = _safe(qi.loc["Operating Income"].iloc[0])
+            yoy = _safe(qi.loc["Operating Income"].iloc[4])
+            if current is not None and yoy is not None and abs(yoy) > 0:
                 result["op_income_growth"] = round(
                     (current - yoy) / abs(yoy), 4
                 )
@@ -43,9 +56,9 @@ def compute_deep_financials(symbol: str) -> dict | None:
             and "Total Debt" in qb.index
             and qb.shape[1] >= 5
         ):
-            current_debt = qb.loc["Total Debt"].iloc[0]
-            yoy_debt = qb.loc["Total Debt"].iloc[4]
-            if yoy_debt and abs(yoy_debt) > 0:
+            current_debt = _safe(qb.loc["Total Debt"].iloc[0])
+            yoy_debt = _safe(qb.loc["Total Debt"].iloc[4])
+            if current_debt is not None and yoy_debt is not None and abs(yoy_debt) > 0:
                 result["debt_growth"] = round(
                     (current_debt - yoy_debt) / abs(yoy_debt), 4
                 )
@@ -56,9 +69,9 @@ def compute_deep_financials(symbol: str) -> dict | None:
             has_oi = "Operating Income" in annual.index
             has_ie = "Interest Expense" in annual.index
             if has_oi and has_ie:
-                op_ttm = annual.loc["Operating Income"].iloc[0]
-                int_exp = annual.loc["Interest Expense"].iloc[0]
-                if int_exp and abs(int_exp) > 0:
+                op_ttm = _safe(annual.loc["Operating Income"].iloc[0])
+                int_exp = _safe(annual.loc["Interest Expense"].iloc[0])
+                if op_ttm is not None and int_exp is not None and abs(int_exp) > 0:
                     result["interest_coverage"] = round(
                         op_ttm / abs(int_exp), 2
                     )
@@ -67,22 +80,25 @@ def compute_deep_financials(symbol: str) -> dict | None:
         if annual is not None and qb is not None:
             try:
                 if "Operating Income" in annual.index:
-                    oi = annual.loc["Operating Income"].iloc[0]
-                    tax_rate = 0.21  # 미국 법인세율 근사
-                    nopat = oi * (1 - tax_rate)
+                    oi = _safe(annual.loc["Operating Income"].iloc[0])
+                    if oi is not None:
+                        tax_rate = 0.21  # 미국 법인세율 근사
+                        nopat = oi * (1 - tax_rate)
+                    else:
+                        nopat = None
 
                     total_equity = None
                     total_debt_val = None
                     cash = None
 
                     if "Stockholders Equity" in qb.index:
-                        total_equity = qb.loc["Stockholders Equity"].iloc[0]
+                        total_equity = _safe(qb.loc["Stockholders Equity"].iloc[0])
                     if "Total Debt" in qb.index:
-                        total_debt_val = qb.loc["Total Debt"].iloc[0]
+                        total_debt_val = _safe(qb.loc["Total Debt"].iloc[0])
                     if "Cash And Cash Equivalents" in qb.index:
-                        cash = qb.loc["Cash And Cash Equivalents"].iloc[0]
+                        cash = _safe(qb.loc["Cash And Cash Equivalents"].iloc[0])
 
-                    if total_equity and total_debt_val:
+                    if nopat is not None and total_equity and total_debt_val:
                         invested_capital = (
                             total_equity
                             + total_debt_val

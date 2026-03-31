@@ -3,13 +3,11 @@ package com.musiqq.stockscreener.ui.screener
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.musiqq.stockscreener.data.local.ScoreWeightPreferences
-import com.musiqq.stockscreener.data.remote.SupabaseApi
 import com.musiqq.stockscreener.data.repository.EquityRepository
 import com.musiqq.stockscreener.domain.model.Equity
 import com.musiqq.stockscreener.domain.model.FilterCriteria
 import com.musiqq.stockscreener.domain.model.PresetSignal
 import com.musiqq.stockscreener.domain.model.ScoreWeights
-import com.musiqq.stockscreener.domain.model.toDomain
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,7 +30,6 @@ data class ScreenerUiState(
 @HiltViewModel
 class ScreenerViewModel @Inject constructor(
     private val repository: EquityRepository,
-    private val api: SupabaseApi,
     scoreWeightPrefs: ScoreWeightPreferences,
 ) : ViewModel() {
 
@@ -70,26 +67,25 @@ class ScreenerViewModel @Inject constructor(
     }
 
     fun loadNextPage() {
-        val state = _uiState.value
-        if (state.isLoading || !state.hasMore) return
+        if (_uiState.value.isLoading || !_uiState.value.hasMore) return
 
         viewModelScope.launch {
-            _uiState.value = state.copy(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val nextPage = state.page + 1
-                val criteria = state.criteria.copy(
+                val nextPage = _uiState.value.page + 1
+                val criteria = _uiState.value.criteria.copy(
                     limit = pageSize,
                     offset = nextPage * pageSize,
                 )
                 val newItems = repository.getEquities(criteria)
-                _uiState.value = state.copy(
-                    items = state.items + newItems,
+                _uiState.value = _uiState.value.copy(
+                    items = _uiState.value.items + newItems,
                     isLoading = false,
                     hasMore = newItems.size >= pageSize,
                     page = nextPage,
                 )
             } catch (e: Exception) {
-                _uiState.value = state.copy(isLoading = false, error = e.message)
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
         }
     }
@@ -127,20 +123,15 @@ class ScreenerViewModel @Inject constructor(
     }
 
     private fun loadFirstPageWithOverrides(overrideFilters: Map<String, String>?) {
+        if (overrideFilters == null) {
+            loadFirstPage()
+            return
+        }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null, page = 0)
             try {
                 val criteria = _uiState.value.criteria.copy(limit = pageSize, offset = 0)
-                val queryMap = criteria.toQueryMap().toMutableMap()
-                overrideFilters?.forEach { (k, v) -> queryMap[k] = v }
-
-                val dtos = api.getEquities(
-                    filters = queryMap,
-                    order = criteria.toOrderString(),
-                    limit = criteria.limit,
-                    offset = criteria.offset,
-                )
-                val items = dtos.map { it.toDomain() }
+                val items = repository.getEquitiesWithOverrides(criteria, overrideFilters)
                 _uiState.value = _uiState.value.copy(
                     items = items,
                     isLoading = false,

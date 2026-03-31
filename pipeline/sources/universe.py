@@ -5,6 +5,7 @@ API 키 불필요, 일 1회 HTTP GET.
 """
 
 import logging
+import time
 import urllib.request
 
 import pandas as pd
@@ -34,7 +35,19 @@ def fetch_universe() -> list[dict]:
         NASDAQ_TRADED_URL,
         headers={"User-Agent": "StockScreener/1.0"},
     )
-    data = urllib.request.urlopen(req, timeout=30).read().decode("utf-8")
+    # 3회 재시도
+    data = None
+    for attempt in range(3):
+        try:
+            data = urllib.request.urlopen(req, timeout=30).read().decode("utf-8")
+            break
+        except Exception as e:
+            logger.warning(f"[Universe] 다운로드 실패 (attempt {attempt + 1}/3): {e}")
+            if attempt < 2:
+                time.sleep(10)
+            else:
+                raise
+    assert data is not None
     lines = data.strip().split("\n")
 
     header = [h.strip() for h in lines[0].split("|")]

@@ -166,14 +166,15 @@ def batch_collect_insider_trades(
 
     for symbol, cik in list(symbols_with_cik.items())[:EDGAR_TOP_N]:
         filings = get_recent_form4_filings(cik)
+        time.sleep(EDGAR_RATE_LIMIT_SLEEP)
         for f in filings:
             trade = parse_form4_xml(f["doc_url"])
+            time.sleep(EDGAR_RATE_LIMIT_SLEEP)
             if trade:
                 trade["symbol"] = symbol
                 trade["filing_date"] = f["filing_date"]
                 trade["accession_no"] = f["accession"]
                 all_trades.append(trade)
-        time.sleep(EDGAR_RATE_LIMIT_SLEEP)
 
         processed += 1
         if processed % 200 == 0:

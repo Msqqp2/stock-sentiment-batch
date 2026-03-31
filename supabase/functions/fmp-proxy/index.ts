@@ -3,14 +3,62 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CACHE_TTL_MINUTES = 30;
 
+// FMP endpoint 화이트리스트 (SSRF 방지)
+const ALLOWED_ENDPOINTS = new Set([
+  "profile",
+  "quote",
+  "key-metrics-ttm",
+  "ratios-ttm",
+  "rating",
+  "discounted-cash-flow",
+  "historical-price-full",
+]);
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
+};
+
 serve(async (req) => {
+  // CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
   try {
+    // 인증 확인: Supabase anon key 또는 유효한 Authorization 헤더 필요
+    const authHeader = req.headers.get("Authorization");
+    const apiKey = req.headers.get("apikey");
+    if (!authHeader && !apiKey) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
+      );
+    }
+
     const { symbol, endpoint } = await req.json();
 
     if (!symbol || !endpoint) {
       return new Response(
         JSON.stringify({ error: "symbol and endpoint are required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
+      );
+    }
+
+    // endpoint 화이트리스트 검증 (SSRF 방지)
+    if (!ALLOWED_ENDPOINTS.has(endpoint)) {
+      return new Response(
+        JSON.stringify({ error: `endpoint '${endpoint}' is not allowed` }),
+        { status: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
+      );
+    }
+
+    // symbol 형식 검증 (알파벳, 숫자, 점, 하이픈만 허용)
+    if (!/^[A-Za-z0-9.\-]{1,10}$/.test(symbol)) {
+      return new Response(
+        JSON.stringify({ error: "invalid symbol format" }),
+        { status: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
       );
     }
 
@@ -32,14 +80,14 @@ serve(async (req) => {
         (Date.now() - new Date(cached.fetched_at).getTime()) / 60000;
       if (ageMinutes < CACHE_TTL_MINUTES) {
         return new Response(JSON.stringify(cached.response_json), {
-          headers: { "Content-Type": "application/json" },
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
         });
       }
     }
 
     // 2) 캐시 미스 → FMP 호출
     const fmpApiKey = Deno.env.get("FMP_API_KEY");
-    const fmpUrl = `https://financialmodelingprep.com/api/v3/${endpoint}/${symbol}?apikey=${fmpApiKey}`;
+    const fmpUrl = `https://financialmodelingprep.com/api/v3/${endpoint}/${encodeURIComponent(symbol)}?apikey=${fmpApiKey}`;
     const fmpResp = await fetch(fmpUrl);
     const fmpData = await fmpResp.json();
 
@@ -55,12 +103,12 @@ serve(async (req) => {
     );
 
     return new Response(JSON.stringify(fmpData), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
   } catch (e) {
     return new Response(
       JSON.stringify({ error: (e as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
     );
   }
 });

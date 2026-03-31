@@ -12,7 +12,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 # ── 이메일 알림 ──
-ALERT_EMAIL = "musiqq86@gmail.com"
+ALERT_EMAIL = os.environ.get("ALERT_EMAIL", "musiqq86@gmail.com")
 
 # ── yfinance 설정 ──
 YFINANCE_CHUNK_SIZE = 80
@@ -55,6 +55,10 @@ X_SENTIMENT_BASE = os.environ.get("X_SENTIMENT_BASE", "https://adanos.org/x-stoc
 X_SENTIMENT_KEY = os.environ.get("X_SENTIMENT_KEY", "")
 X_SENTIMENT_HEALTH_TIMEOUT = 10
 X_SENTIMENT_MAX_CONSECUTIVE_FAILURES = 3
+
+# ── ETF 롤링 배치 ──
+ETF_TIER1_COUNT = 300
+ETF_TIER2_COUNT = 700
 
 # ── 심화 재무 ──
 DEEP_FINANCIAL_TOP_N = 500

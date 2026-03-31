@@ -117,14 +117,21 @@ def compute_performance(hist: pd.DataFrame) -> dict:
 
 
 def _rsi(close: np.ndarray, period: int = 14) -> float | None:
+    """Wilder's smoothing RSI."""
     if len(close) < period + 1:
         return None
     deltas = np.diff(close)
-    gains = np.where(deltas > 0, deltas, 0)
-    losses = np.where(deltas < 0, -deltas, 0)
+    gains = np.where(deltas > 0, deltas, 0.0)
+    losses = np.where(deltas < 0, -deltas, 0.0)
 
-    avg_gain = np.mean(gains[-period:])
-    avg_loss = np.mean(losses[-period:])
+    # 초기 SMA
+    avg_gain = np.mean(gains[:period])
+    avg_loss = np.mean(losses[:period])
+
+    # Wilder's exponential smoothing
+    for i in range(period, len(gains)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
 
     if avg_loss == 0:
         return 100.0
@@ -162,7 +169,12 @@ def _macd(close: np.ndarray) -> dict | None:
     macd_series = ema12_series[-min_len:] - ema26_series[-min_len:]
     if len(macd_series) < 9:
         return None
-    signal = float(np.mean(macd_series[-9:]))
+    # Signal line: 9-period EMA of MACD
+    signal_ema = float(np.mean(macd_series[:9]))
+    sig_mult = 2 / (9 + 1)
+    for val in macd_series[9:]:
+        signal_ema = (float(val) - signal_ema) * sig_mult + signal_ema
+    signal = signal_ema
     macd_val = float(macd_line)
     return {
         "macd": round(macd_val, 4),
@@ -182,14 +194,18 @@ def _stochastic(
         return None
 
     k_values = []
+    n = len(close)
     for i in range(d_period):
-        idx = -(i + 1)
-        h = np.max(high[idx - k_period + 1 : len(high) + idx + 1 if idx != -1 else len(high)])
-        l = np.min(low[idx - k_period + 1 : len(low) + idx + 1 if idx != -1 else len(low)])
+        end = n - i      # exclusive end index
+        start = end - k_period
+        if start < 0:
+            start = 0
+        h = np.max(high[start:end])
+        l = np.min(low[start:end])
         if h - l == 0:
             k_values.append(50.0)
         else:
-            k_values.append((close[idx] - l) / (h - l) * 100)
+            k_values.append((close[end - 1] - l) / (h - l) * 100)
 
     stoch_k = k_values[0]
     stoch_d = np.mean(k_values)

@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.musiqq.stockscreener.ui.components.TooltipHeader
-import com.musiqq.stockscreener.ui.search.SearchBar
 
 @Composable
 fun ScreenerScreen(
@@ -51,12 +50,7 @@ fun ScreenerScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SearchBar(
-            onSymbolSelected = { onNavigateToDetail(it) },
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-        )
-
-        Row(modifier = Modifier.padding(horizontal = 8.dp)) {
+        Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
             FilterChip(
                 selected = state.criteria.assetType == "stock",
                 onClick = { viewModel.switchAssetType("stock") },
@@ -94,7 +88,7 @@ fun ScreenerScreen(
             TooltipHeader("volume", Modifier.width(50.dp)) { viewModel.toggleSort("volume") }
             TooltipHeader("score_total", Modifier.width(30.dp)) { viewModel.toggleSort("score_total") }
         }
-        Divider()
+        HorizontalDivider()
 
         state.error?.let { error ->
             Text(
@@ -111,7 +105,7 @@ fun ScreenerScreen(
                     onClick = { onNavigateToDetail(equity.symbol) },
                 )
                 if (index < state.items.lastIndex) {
-                    Divider(thickness = 0.5.dp)
+                    HorizontalDivider(thickness = 0.5.dp)
                 }
             }
             if (state.isLoading) {

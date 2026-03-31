@@ -5,7 +5,7 @@ INSERT ... ON CONFLICT (symbol) DO UPDATE.
 
 import logging
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from supabase import create_client
 
@@ -193,7 +193,10 @@ def upsert_insider_trades(supabase, trades: list[dict]):
     for i in range(0, len(records), UPSERT_CHUNK_SIZE):
         chunk = records[i : i + UPSERT_CHUNK_SIZE]
         try:
-            supabase.table("insider_trades").insert(chunk).execute()
+            supabase.table("insider_trades").upsert(
+                chunk,
+                on_conflict="symbol,txn_date,insider_name,accession_no",
+            ).execute()
             total += len(chunk)
         except Exception as e:
             logger.warning(f"[UPSERT] insider_trades 실패: {e}")
@@ -203,19 +206,25 @@ def upsert_insider_trades(supabase, trades: list[dict]):
 
 
 def update_insider_aggregates(supabase, agg_data: dict[str, dict]):
-    """내부자 거래 집계를 latest_equities에 업데이트."""
-    records = []
-    for sym, agg in agg_data.items():
-        rec = {"symbol": sym}
-        rec.update(agg)
-        rec["edgar_updated_at"] = datetime.utcnow().isoformat()
-        records.append(rec)
+    """내부자 거래 집계를 latest_equities에 직접 UPDATE (name 불필요)."""
+    if not agg_data:
+        return
 
-    if records:
-        upsert_equities(supabase, records)
-        logger.info(
-            f"[UPSERT] 내부자 집계: {len(records)}종목 업데이트"
-        )
+    updated = 0
+    now_ts = datetime.now(timezone.utc).isoformat()
+
+    for sym, agg in agg_data.items():
+        payload = dict(agg)
+        payload["edgar_updated_at"] = now_ts
+        try:
+            supabase.table("latest_equities").update(
+                payload
+            ).eq("symbol", sym).execute()
+            updated += 1
+        except Exception as e:
+            logger.debug(f"[UPSERT] 내부자 집계 {sym} 실패: {e}")
+
+    logger.info(f"[UPSERT] 내부자 집계: {updated}/{len(agg_data)}종목 업데이트")
 
 
 def update_etf_data(supabase, etf_records: list[dict]):
@@ -227,7 +236,7 @@ def update_etf_data(supabase, etf_records: list[dict]):
 
 def cleanup_fmp_cache(supabase):
     """30분 이상 경과한 FMP 온디맨드 캐시 삭제."""
-    cutoff = (datetime.utcnow() - timedelta(minutes=30)).isoformat()
+    cutoff = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
     try:
         supabase.table("fmp_cache").delete().lt(
             "fetched_at", cutoff
@@ -238,7 +247,7 @@ def cleanup_fmp_cache(supabase):
 
 
 def mark_delisted(supabase, active_symbols: set[str]):
-    """Universe에 없는 종목을 상장폐지 마킹."""
+    """Universe에 없는 종목을 상장폐지 마킹. 안전장치 포함."""
     try:
         existing = (
             supabase.table("latest_equities")
@@ -250,11 +259,22 @@ def mark_delisted(supabase, active_symbols: set[str]):
         existing_symbols = {r["symbol"] for r in existing}
         to_delist = existing_symbols - active_symbols
 
+        # 안전장치: universe가 50% 미만이면 스킵 (부분 실패 방지)
+        if len(active_symbols) < len(existing_symbols) * 0.5:
+            logger.warning(
+                f"[UPSERT] 상장폐지 스킵 — universe({len(active_symbols)})가 "
+                f"기존({len(existing_symbols)})의 50% 미만. 데이터 소스 장애 의심"
+            )
+            return
+
         if to_delist:
-            for sym in to_delist:
+            # 배치 UPDATE (N+1 방지)
+            delist_list = list(to_delist)
+            for i in range(0, len(delist_list), UPSERT_CHUNK_SIZE):
+                chunk = delist_list[i : i + UPSERT_CHUNK_SIZE]
                 supabase.table("latest_equities").update(
                     {"is_delisted": True}
-                ).eq("symbol", sym).execute()
+                ).in_("symbol", chunk).execute()
             logger.info(f"[UPSERT] 상장폐지 마킹: {len(to_delist)}건")
     except Exception as e:
         logger.warning(f"[UPSERT] 상장폐지 마킹 실패: {e}")

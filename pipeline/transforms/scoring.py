@@ -89,19 +89,23 @@ def _value_composite(row: dict) -> float | None:
 
 
 def _quality_composite(row: dict) -> float | None:
-    """퀄리티 종합 (높을수록 좋음)."""
+    """퀄리티 종합 (높을수록 좋음). 모든 지표를 0~1 스케일로 정규화."""
     roe = _num(row.get("roe"))
     roa = _num(row.get("roa"))
     margin = _num(row.get("operating_margin"))
     current = _num(row.get("current_ratio"))
 
     vals = []
+    # ROE: 일반적 범위 -0.5~0.5 → 0~1로 정규화
     if roe is not None:
-        vals.append(roe)
+        vals.append(max(0, min((roe + 0.5) / 1.0, 1.0)))
+    # ROA: 일반적 범위 -0.2~0.2 → 0~1
     if roa is not None:
-        vals.append(roa)
+        vals.append(max(0, min((roa + 0.2) / 0.4, 1.0)))
+    # Operating margin: -0.3~0.5 → 0~1
     if margin is not None:
-        vals.append(margin)
+        vals.append(max(0, min((margin + 0.3) / 0.8, 1.0)))
+    # Current ratio: 0~3 → 0~1
     if current is not None and 0 < current < 20:
         vals.append(min(current / 3, 1.0))
 

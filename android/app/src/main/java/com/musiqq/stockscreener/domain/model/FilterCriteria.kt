@@ -38,23 +38,61 @@ data class FilterCriteria(
         map["asset_type"] = "eq.$assetType"
 
         marketCapMin?.let { map["market_cap"] = "gte.$it" }
-        peMin?.let { map["pe_ttm"] = "gte.$it" }
-        peMax?.let {
-            val existing = map["pe_ttm"]
+        marketCapMax?.let {
+            val existing = map["market_cap"]
             if (existing != null) {
-                // PostgREST doesn't support dual range on same column easily
-                // Use separate param name approach isn't supported
-                // For now, just use max
+                // 범위 필터: and 조건으로 결합
+                map.remove("market_cap")
+                map["and"] = "(market_cap.gte.${marketCapMin},market_cap.lte.$it)"
+            } else {
+                map["market_cap"] = "lte.$it"
             }
-            map["pe_ttm"] = "lte.$it"
+        }
+        // PE 범위 필터
+        if (peMin != null && peMax != null) {
+            val conditions = mutableListOf<String>()
+            conditions.add("pe_ttm.gte.$peMin")
+            conditions.add("pe_ttm.lte.$peMax")
+            val existing = map["and"]
+            if (existing != null) {
+                map["and"] = existing.dropLast(1) + ",${conditions.joinToString(",")})"
+            } else {
+                map["and"] = "(${conditions.joinToString(",")})"
+            }
+        } else {
+            peMin?.let { map["pe_ttm"] = "gte.$it" }
+            peMax?.let { map["pe_ttm"] = "lte.$it" }
         }
         dividendYieldMin?.let { map["dividend_yield"] = "gte.$it" }
         pctFrom52hMin?.let { map["pct_from_52h"] = "gte.$it" }
+        pctFrom52hMax?.let {
+            val existing = map["pct_from_52h"]
+            if (existing != null) {
+                map.remove("pct_from_52h")
+                val andVal = map["and"]
+                val cond = "pct_from_52h.gte.${pctFrom52hMin},pct_from_52h.lte.$it"
+                map["and"] = if (andVal != null) andVal.dropLast(1) + ",$cond)" else "($cond)"
+            } else {
+                map["pct_from_52h"] = "lte.$it"
+            }
+        }
         roeMin?.let { map["roe"] = "gte.$it" }
         debtToEquityMax?.let { map["debt_to_equity"] = "lte.$it" }
         revenueGrowthMin?.let { map["revenue_growth"] = "gte.$it" }
         targetUpsideMin?.let { map["target_upside_pct"] = "gte.$it" }
         insiderBuy3mMin?.let { map["insider_buy_3m"] = "gte.$it" }
+        shortPctFloatMin?.let { map["short_pct_float"] = "gte.$it" }
+        shortPctFloatMax?.let {
+            val existing = map["short_pct_float"]
+            if (existing != null) {
+                map.remove("short_pct_float")
+                val andVal = map["and"]
+                val cond = "short_pct_float.gte.${shortPctFloatMin},short_pct_float.lte.$it"
+                map["and"] = if (andVal != null) andVal.dropLast(1) + ",$cond)" else "($cond)"
+            } else {
+                map["short_pct_float"] = "lte.$it"
+            }
+        }
         expenseRatioMax?.let { map["expense_ratio"] = "lte.$it" }
         aumMin?.let { map["aum"] = "gte.$it" }
         assetClass?.let { map["asset_class"] = "eq.$it" }

@@ -2,8 +2,9 @@ package com.musiqq.stockscreener.ui.heatmap
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musiqq.stockscreener.data.remote.dto.EquityDto
+import com.google.gson.Gson
 import com.musiqq.stockscreener.data.repository.EquityRepository
+import com.musiqq.stockscreener.domain.model.Equity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HeatMapUiState(
-    val data: List<EquityDto> = emptyList(),
+    val data: List<Equity> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
 )
@@ -24,6 +25,8 @@ class HeatMapViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(HeatMapUiState())
     val uiState: StateFlow<HeatMapUiState> = _uiState.asStateFlow()
+
+    private val gson = Gson()
 
     init {
         loadHeatmapData()
@@ -48,17 +51,15 @@ class HeatMapViewModel @Inject constructor(
         val items = _uiState.value.data
         if (items.isEmpty()) return "[]"
 
-        val sb = StringBuilder("[")
-        items.forEachIndexed { index, dto ->
-            if (index > 0) sb.append(",")
-            val symbol = dto.symbol.replace("\"", "\\\"")
-            val name = dto.name.replace("\"", "\\\"")
-            val sector = (dto.sector ?: "Other").replace("\"", "\\\"")
-            val marketCap = dto.marketCap ?: 0L
-            val changePct = dto.changePct ?: 0.0
-            sb.append("""{"s":"$symbol","n":"$name","sec":"$sector","mc":$marketCap,"cp":$changePct}""")
+        val list = items.map { eq ->
+            mapOf(
+                "s" to eq.symbol,
+                "n" to eq.name,
+                "sec" to (eq.sector ?: "Other"),
+                "mc" to (eq.marketCap ?: 0L),
+                "cp" to (eq.changePct ?: 0.0),
+            )
         }
-        sb.append("]")
-        return sb.toString()
+        return gson.toJson(list)
     }
 }

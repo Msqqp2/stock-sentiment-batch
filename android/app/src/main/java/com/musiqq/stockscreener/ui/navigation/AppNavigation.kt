@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -26,17 +27,19 @@ import androidx.navigation.navArgument
 import com.musiqq.stockscreener.ui.detail.DetailScreen
 import com.musiqq.stockscreener.ui.heatmap.HeatMapScreen
 import com.musiqq.stockscreener.ui.screener.ScreenerScreen
+import com.musiqq.stockscreener.ui.search.SearchScreen
 import com.musiqq.stockscreener.ui.settings.SettingsScreen
 import com.musiqq.stockscreener.ui.watchlist.WatchlistScreen
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
+    data object Search : Screen("search", "종목검색", Icons.Default.Search)
     data object Screener : Screen("screener", "스크리너", Icons.Default.BarChart)
     data object HeatMap : Screen("heatmap", "히트맵", Icons.Default.GridView)
     data object Watchlist : Screen("watchlist", "관심종목", Icons.Default.Star)
     data object Settings : Screen("settings", "설정", Icons.Default.Settings)
 }
 
-private val bottomTabs = listOf(Screen.Screener, Screen.HeatMap, Screen.Watchlist, Screen.Settings)
+private val bottomTabs = listOf(Screen.Search, Screen.Screener, Screen.HeatMap, Screen.Watchlist, Screen.Settings)
 
 @Composable
 fun AppNavigation() {
@@ -77,9 +80,16 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Screener.route,
+            startDestination = Screen.Search.route,
             modifier = Modifier.padding(innerPadding),
         ) {
+            composable(Screen.Search.route) {
+                SearchScreen(
+                    onNavigateToDetail = { symbol ->
+                        navController.navigate("detail/$symbol")
+                    },
+                )
+            }
             composable(Screen.Screener.route) {
                 ScreenerScreen(
                     onNavigateToDetail = { symbol ->

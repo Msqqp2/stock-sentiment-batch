@@ -1,7 +1,6 @@
 package com.musiqq.stockscreener.data.repository
 
 import com.musiqq.stockscreener.data.remote.SupabaseApi
-import com.musiqq.stockscreener.data.remote.dto.EquityDto
 import com.musiqq.stockscreener.data.remote.dto.InsiderTradeDto
 import com.musiqq.stockscreener.domain.model.Equity
 import com.musiqq.stockscreener.domain.model.FilterCriteria
@@ -25,8 +24,24 @@ class EquityRepository @Inject constructor(
         return dtos.map { it.toDomain() }
     }
 
+    suspend fun getEquitiesWithOverrides(
+        criteria: FilterCriteria,
+        overrideFilters: Map<String, String>,
+    ): List<Equity> {
+        val queryMap = criteria.toQueryMap().toMutableMap()
+        overrideFilters.forEach { (k, v) -> queryMap[k] = v }
+        val dtos = api.getEquities(
+            filters = queryMap,
+            order = criteria.toOrderString(),
+            limit = criteria.limit,
+            offset = criteria.offset,
+        )
+        return dtos.map { it.toDomain() }
+    }
+
     suspend fun search(query: String, limit: Int = 20): List<Equity> {
-        val dtos = api.searchEquities(query = "%$query%", limit = limit)
+        val orFilter = "(symbol.ilike.*$query*,name.ilike.*$query*)"
+        val dtos = api.searchEquities(query = orFilter, limit = limit)
         return dtos.map { it.toDomain() }
     }
 
@@ -49,7 +64,7 @@ class EquityRepository @Inject constructor(
         )
     }
 
-    suspend fun getHeatmapData(sector: String? = null): List<EquityDto> {
+    suspend fun getHeatmapData(sector: String? = null): List<Equity> {
         val filters = mutableMapOf<String, String>()
         filters["asset_type"] = "eq.stock"
         filters["market_cap"] = "gte.2000000000" // $2B+
@@ -59,6 +74,6 @@ class EquityRepository @Inject constructor(
             select = "symbol,name,sector,market_cap,change_pct",
             order = "market_cap.desc.nullslast",
             limit = 500,
-        )
+        ).map { it.toDomain() }
     }
 }

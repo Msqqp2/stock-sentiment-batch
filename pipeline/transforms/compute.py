@@ -3,6 +3,8 @@
 벤더 값을 기반으로 파생 지표를 Python에서 미리 산출.
 """
 
+import math
+
 
 def compute_derived_fields(row: dict) -> dict:
     """RDBMS 연산 부하 0을 위해 Python에서 미리 계산."""
@@ -71,8 +73,6 @@ def compute_derived_fields(row: dict) -> dict:
     eps = row.get("eps_ttm")
     bvps = row.get("book_value")
     if eps and bvps and eps > 0 and bvps > 0:
-        import math
-
         row["graham_number"] = round(math.sqrt(22.5 * eps * bvps), 4)
         if price and price > 0:
             row["graham_upside_pct"] = round(
