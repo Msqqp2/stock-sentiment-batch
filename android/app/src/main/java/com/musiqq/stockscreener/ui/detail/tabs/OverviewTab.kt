@@ -40,14 +40,26 @@ fun OverviewTab(equity: Equity) {
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        val dto = equity.dto
+
         // 기본 정보
         SectionCard("기본 정보") {
             DataRow("거래소", equity.exchange ?: "-")
             DataRow("섹터", equity.sector ?: "-")
             DataRow("산업", equity.industry ?: "-")
+            DataRow("국가", dto?.country ?: "-")
             DataRow("시가총액", NumberFormatter.formatMarketCap(equity.marketCap))
             DataRow("거래량", NumberFormatter.formatVolume(equity.volume))
             DataRow("베타", NumberFormatter.formatRatio(equity.beta))
+        }
+
+        // 시세
+        SectionCard("시세") {
+            DataRow("시가", NumberFormatter.formatPrice(dto?.openPrice))
+            DataRow("고가", NumberFormatter.formatPrice(dto?.dayHigh))
+            DataRow("저가", NumberFormatter.formatPrice(dto?.dayLow))
+            DataRow("전일종가", NumberFormatter.formatPrice(dto?.prevClose))
+            DataRow("평균거래량", NumberFormatter.formatVolume(dto?.avgVolume10d))
         }
 
         // 밸류에이션
@@ -68,6 +80,9 @@ fun OverviewTab(equity: Equity) {
             DataRow("52주 저가", NumberFormatter.formatPrice(equity.week52Low))
             DataRow("고가괴리", NumberFormatter.formatPct(equity.pctFrom52h?.let { it / 100 }))
             DataRow("상대거래량", NumberFormatter.formatMultiple(equity.relativeVolume))
+            DataRow("MACD히스토", NumberFormatter.formatRatio(dto?.macdHist))
+            DataRow("주간변동성", NumberFormatter.formatPct(dto?.volatilityW))
+            DataRow("월간변동성", NumberFormatter.formatPct(dto?.volatilityM))
         }
 
         // 스코어
@@ -77,6 +92,13 @@ fun OverviewTab(equity: Equity) {
             DataRow("모멘텀", NumberFormatter.formatScore(equity.scoreMomentum))
             DataRow("성장", NumberFormatter.formatScore(equity.scoreGrowth))
             DataRow("종합", NumberFormatter.formatScore(equity.scoreTotal))
+        }
+
+        // 소셜
+        dto?.socialScore?.let {
+            SectionCard("소셜") {
+                DataRow("소셜점수", NumberFormatter.formatScore(it))
+            }
         }
 
         // Freshness

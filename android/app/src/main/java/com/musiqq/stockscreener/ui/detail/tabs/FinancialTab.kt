@@ -35,6 +35,15 @@ fun FinancialTab(equity: Equity) {
             DataRow("FCF수익률", NumberFormatter.formatPct(dto?.fcfYield))
         }
 
+        SectionCard("재무(절대값)") {
+            DataRow("총매출", NumberFormatter.formatMarketCap(dto?.totalRevenue))
+            DataRow("EBITDA", NumberFormatter.formatMarketCap(dto?.ebitda))
+            DataRow("잉여현금흐름", NumberFormatter.formatMarketCap(dto?.freeCashflow))
+            DataRow("현금", NumberFormatter.formatMarketCap(dto?.totalCash))
+            DataRow("총부채", NumberFormatter.formatMarketCap(dto?.totalDebt))
+            DataRow("주당순자산", NumberFormatter.formatPrice(dto?.bookValue))
+        }
+
         SectionCard("성장") {
             DataRow("매출성장률", NumberFormatter.formatPct(dto?.revenueGrowth))
             DataRow("이익성장률", NumberFormatter.formatPct(dto?.earningsGrowth))
@@ -47,6 +56,8 @@ fun FinancialTab(equity: Equity) {
             DataRow("당좌비율", NumberFormatter.formatRatio(dto?.quickRatio))
             DataRow("이자보상배율", NumberFormatter.formatRatio(dto?.interestCoverage))
             DataRow("부채증가율", NumberFormatter.formatPct(dto?.debtGrowth))
+            DataRow("피오트로스키", NumberFormatter.formatInt(dto?.piotroskiScore))
+            DataRow("알트만Z", NumberFormatter.formatRatio(dto?.altmanZScore))
         }
 
         SectionCard("밸류에이션") {
@@ -56,6 +67,17 @@ fun FinancialTab(equity: Equity) {
             DataRow("그레이엄넘버", NumberFormatter.formatPrice(dto?.grahamNumber))
             DataRow("DCF가치", NumberFormatter.formatPrice(dto?.dcfValue))
             DataRow("DCF괴리", NumberFormatter.formatPct(dto?.dcfUpsidePct?.let { it / 100 }))
+            DataRow("P/FCF", NumberFormatter.formatRatio(dto?.pfcfRatio))
+            DataRow("기업가치", NumberFormatter.formatMarketCap(dto?.ev))
+            DataRow("EV/매출", NumberFormatter.formatRatio(dto?.evRevenue))
+        }
+
+        SectionCard("배당") {
+            DataRow("배당률", NumberFormatter.formatYield(dto?.dividendYield))
+            DataRow("주당배당금", NumberFormatter.formatPrice(dto?.dividendRate))
+            DataRow("배당성향", NumberFormatter.formatPct(dto?.payoutRatio))
+            DataRow("5년평균배당률", NumberFormatter.formatYield(dto?.avgDividendYield5y))
+            DataRow("주주환원율", NumberFormatter.formatPct(dto?.shareholderYield))
         }
 
         Spacer(Modifier.height(16.dp))

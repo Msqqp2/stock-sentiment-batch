@@ -38,6 +38,8 @@ fun SupplyDemandTab(equity: Equity, insiderTrades: List<InsiderTradeDto>) {
     ) {
         SectionCard("공매도") {
             DataRow("공매도비율", NumberFormatter.formatPct(equity.shortPctFloat))
+            DataRow("공매도주식수", NumberFormatter.formatVolume(dto?.sharesShort))
+            DataRow("숏레이시오", NumberFormatter.formatRatio(dto?.shortRatio))
         }
 
         SectionCard("내부자 거래 (3개월)") {
@@ -45,10 +47,16 @@ fun SupplyDemandTab(equity: Equity, insiderTrades: List<InsiderTradeDto>) {
             DataRow("매도건수", NumberFormatter.formatInt(dto?.insiderSell3m))
             DataRow("최근거래", equity.insiderLatestType ?: "-")
             DataRow("순매수주식", NumberFormatter.formatInt(dto?.insiderNetShares))
+            DataRow("내부자보유", NumberFormatter.formatPct(dto?.insiderPct))
         }
 
         SectionCard("기관보유") {
             DataRow("기관보유비율", NumberFormatter.formatPct(dto?.instOwnership))
+        }
+
+        SectionCard("주식 구조") {
+            DataRow("발행주식수", NumberFormatter.formatVolume(dto?.sharesOutstanding))
+            DataRow("유통주식수", NumberFormatter.formatVolume(dto?.floatShares))
         }
 
         // 최근 내부자 거래 리스트
