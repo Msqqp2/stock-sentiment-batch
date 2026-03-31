@@ -1,0 +1,16 @@
+# 데이터 수집
+yfinance>=0.2.36
+requests>=2.31.0
+
+# 데이터 처리
+pandas>=2.2.0
+lxml>=5.1.0
+numpy>=1.26.0
+
+# DB 연동
+supabase>=2.3.0
+
+# 유틸리티
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+tenacity>=8.2.0

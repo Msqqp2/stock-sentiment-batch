@@ -1,0 +1,63 @@
+name: Daily Stock Screener Sync
+
+on:
+  schedule:
+    # 매일 KST 07:00 (UTC 22:00 전일) — 미국 장 마감 후
+    - cron: '0 22 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Check US market holiday
+        id: holiday_check
+        run: python -m pipeline.utils.us_market_calendar
+
+      - name: Run sync pipeline
+        id: sync_run
+        if: steps.holiday_check.outputs.is_trading_day == 'true'
+        env:
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          X_SENTIMENT_KEY: ${{ secrets.X_SENTIMENT_KEY }}
+        run: python -m pipeline.daily_sync
+
+      - name: Skip message
+        if: steps.holiday_check.outputs.is_trading_day == 'false'
+        run: echo "US market holiday — skipping today's batch."
+
+      - name: Send failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "Stock Screener batch failed — ${{ github.run_id }}"
+          to: musiqq86@gmail.com
+          from: Stock Screener Bot <${{ secrets.GMAIL_USER }}>
+          body: |
+            Batch pipeline failure alert
+
+            Workflow: ${{ github.workflow }}
+            Run ID: ${{ github.run_id }}
+            Time (UTC): ${{ github.event.head_commit.timestamp || 'scheduled' }}
+
+            Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

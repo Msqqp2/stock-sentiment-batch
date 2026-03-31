@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>HeatMap</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; overflow: hidden; font-family: -apple-system, sans-serif; }
+#chart { width: 100vw; height: 100vh; }
+.cell text { pointer-events: none; fill: #fff; font-weight: 600; }
+.cell rect { stroke: #0d1117; stroke-width: 1px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="chart"></div>
+<script>
+function getColor(cp) {
+    if (cp >= 3) return '#2ea043';
+    if (cp >= 1) return '#196c2e';
+    if (cp > 0) return '#1a3a2a';
+    if (cp === 0) return '#30363d';
+    if (cp > -1) return '#3a2328';
+    if (cp > -3) return '#6e2b2b';
+    return '#da3633';
+}
+
+function render(data) {
+    const w = window.innerWidth, h = window.innerHeight;
+    const svg = d3.select('#chart').append('svg').attr('width', w).attr('height', h);
+
+    const grouped = d3.group(data, d => d.sec);
+    const root = d3.hierarchy({children: Array.from(grouped, ([key, values]) => ({
+        name: key, children: values
+    }))})
+    .sum(d => Math.max(d.mc || 0, 1))
+    .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+    d3.treemap().size([w, h]).padding(1).round(true)(root);
+
+    const cell = svg.selectAll('g')
+        .data(root.leaves())
+        .join('g')
+        .attr('class', 'cell')
+        .attr('transform', d => `translate(${d.x0},${d.y0})`);
+
+    cell.append('rect')
+        .attr('width', d => d.x1 - d.x0)
+        .attr('height', d => d.y1 - d.y0)
+        .attr('fill', d => getColor(d.data.cp || 0))
+        .attr('rx', 2)
+        .on('click', (e, d) => {
+            if (window.Android) window.Android.onSymbolClick(d.data.s);
+        });
+
+    cell.each(function(d) {
+        const cw = d.x1 - d.x0, ch = d.y1 - d.y0;
+        const g = d3.select(this);
+        if (cw > 30 && ch > 18) {
+            g.append('text')
+                .attr('x', cw / 2).attr('y', ch / 2 - 4)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', Math.min(cw / 6, 12) + 'px')
+                .text(d.data.s);
+        }
+        if (cw > 40 && ch > 30) {
+            const cp = d.data.cp || 0;
+            const sign = cp > 0 ? '+' : '';
+            g.append('text')
+                .attr('x', cw / 2).attr('y', ch / 2 + 10)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', Math.min(cw / 7, 10) + 'px')
+                .attr('opacity', 0.9)
+                .text(sign + cp.toFixed(1) + '%');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const json = window.Android ? window.Android.getData() : '[]';
+        const data = JSON.parse(json);
+        if (data.length > 0) render(data);
+    } catch(e) {
+        document.body.innerHTML = '<p style="color:#f85149;padding:20px">Error: ' + e.message + '</p>';
+    }
+});
+</script>
+</body>
+</html>

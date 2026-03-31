@@ -1,0 +1,113 @@
+package com.musiqq.stockscreener.ui.constants
+
+data class ColumnDef(
+    val key: String,
+    val korean: String,
+    val english: String,
+    val category: String,
+)
+
+val COLUMN_DEFS = listOf(
+    // 기본
+    ColumnDef("symbol", "종목코드", "Symbol", "기본"),
+    ColumnDef("name", "종목명", "Name", "기본"),
+    ColumnDef("exchange", "거래소", "Exchange", "기본"),
+    ColumnDef("sector", "섹터", "Sector", "기본"),
+    ColumnDef("industry", "산업", "Industry", "기본"),
+    ColumnDef("asset_type", "자산유형", "Asset Type", "기본"),
+    // 시세
+    ColumnDef("price", "현재가", "Price", "시세"),
+    ColumnDef("change_pct", "등락률", "Change %", "시세"),
+    ColumnDef("volume", "거래량", "Volume", "시세"),
+    ColumnDef("market_cap", "시가총액", "Market Cap", "시세"),
+    ColumnDef("relative_volume", "상대거래량", "Rel. Volume", "시세"),
+    ColumnDef("turnover", "회전율", "Turnover", "시세"),
+    ColumnDef("gap_pct", "갭비율", "Gap %", "시세"),
+    // 밸류에이션
+    ColumnDef("pe_ttm", "PER", "P/E (TTM)", "밸류에이션"),
+    ColumnDef("pe_forward", "예상PER", "Fwd P/E", "밸류에이션"),
+    ColumnDef("pb_ratio", "PBR", "P/B", "밸류에이션"),
+    ColumnDef("ps_ratio", "PSR", "P/S", "밸류에이션"),
+    ColumnDef("ev_ebitda", "EV/EBITDA", "EV/EBITDA", "밸류에이션"),
+    ColumnDef("peg_ratio", "PEG", "PEG", "밸류에이션"),
+    ColumnDef("eps_ttm", "EPS", "EPS (TTM)", "밸류에이션"),
+    ColumnDef("graham_number", "그레이엄", "Graham #", "밸류에이션"),
+    // 배당
+    ColumnDef("dividend_yield", "배당률", "Div. Yield", "배당"),
+    ColumnDef("payout_ratio", "배당성향", "Payout Ratio", "배당"),
+    ColumnDef("ex_dividend_date", "배당락일", "Ex-Div Date", "배당"),
+    ColumnDef("shareholder_yield", "주주환원율", "Shareholder Yield", "배당"),
+    // 수익성
+    ColumnDef("roe", "ROE", "ROE", "수익성"),
+    ColumnDef("roa", "ROA", "ROA", "수익성"),
+    ColumnDef("roic", "ROIC", "ROIC", "수익성"),
+    ColumnDef("gross_margin", "매출총이익률", "Gross Margin", "수익성"),
+    ColumnDef("operating_margin", "영업이익률", "Op. Margin", "수익성"),
+    ColumnDef("net_margin", "순이익률", "Net Margin", "수익성"),
+    ColumnDef("fcf_yield", "FCF수익률", "FCF Yield", "수익성"),
+    // 성장
+    ColumnDef("revenue_growth", "매출성장률", "Rev. Growth", "성장"),
+    ColumnDef("earnings_growth", "이익성장률", "Earn. Growth", "성장"),
+    ColumnDef("op_income_growth", "영업이익성장", "Op. Inc. Growth", "성장"),
+    // 재무안정성
+    ColumnDef("debt_to_equity", "부채비율", "D/E Ratio", "재무안정성"),
+    ColumnDef("current_ratio", "유동비율", "Current Ratio", "재무안정성"),
+    ColumnDef("quick_ratio", "당좌비율", "Quick Ratio", "재무안정성"),
+    ColumnDef("interest_coverage", "이자보상배율", "Int. Coverage", "재무안정성"),
+    ColumnDef("debt_growth", "부채증가율", "Debt Growth", "재무안정성"),
+    // 기술적
+    ColumnDef("rsi_14", "RSI(14)", "RSI(14)", "기술적"),
+    ColumnDef("ma50", "50일선", "MA(50)", "기술적"),
+    ColumnDef("ma200", "200일선", "MA(200)", "기술적"),
+    ColumnDef("ma20", "20일선", "MA(20)", "기술적"),
+    ColumnDef("beta", "베타", "Beta", "기술적"),
+    ColumnDef("atr_14", "ATR(14)", "ATR(14)", "기술적"),
+    ColumnDef("macd", "MACD", "MACD", "기술적"),
+    ColumnDef("macd_signal", "MACD시그널", "MACD Signal", "기술적"),
+    ColumnDef("stoch_k", "스토캐스틱K", "Stoch %K", "기술적"),
+    ColumnDef("stoch_d", "스토캐스틱D", "Stoch %D", "기술적"),
+    ColumnDef("adx_14", "ADX(14)", "ADX(14)", "기술적"),
+    ColumnDef("cci_20", "CCI(20)", "CCI(20)", "기술적"),
+    ColumnDef("williams_r", "윌리엄스%R", "Williams %R", "기술적"),
+    ColumnDef("week52_high", "52주고가", "52W High", "기술적"),
+    ColumnDef("week52_low", "52주저가", "52W Low", "기술적"),
+    ColumnDef("pct_from_52h", "고가괴리", "% from 52H", "기술적"),
+    ColumnDef("pct_from_52l", "저가괴리", "% from 52L", "기술적"),
+    ColumnDef("sma50_div", "50일괴리", "SMA50 Div.", "기술적"),
+    ColumnDef("sma200_div", "200일괴리", "SMA200 Div.", "기술적"),
+    // 수급
+    ColumnDef("short_pct_float", "공매도비율", "Short % Float", "수급"),
+    ColumnDef("insider_buy_3m", "내부자매수", "Insider Buys(3M)", "수급"),
+    ColumnDef("insider_sell_3m", "내부자매도", "Insider Sells(3M)", "수급"),
+    ColumnDef("insider_latest_type", "최근내부자", "Last Insider", "수급"),
+    ColumnDef("inst_ownership", "기관보유", "Inst. Own.", "수급"),
+    // 애널리스트
+    ColumnDef("analyst_rating", "투자의견", "Rating", "애널리스트"),
+    ColumnDef("analyst_rating_score", "의견점수", "Rating Score", "애널리스트"),
+    ColumnDef("analyst_count", "애널리스트수", "# Analysts", "애널리스트"),
+    ColumnDef("target_mean", "목표가", "Target Mean", "애널리스트"),
+    ColumnDef("target_upside_pct", "목표괴리", "Target Upside", "애널리스트"),
+    // 성과
+    ColumnDef("perf_1w", "1주수익", "1W Return", "성과"),
+    ColumnDef("perf_1m", "1달수익", "1M Return", "성과"),
+    ColumnDef("perf_3m", "3달수익", "3M Return", "성과"),
+    ColumnDef("perf_6m", "6달수익", "6M Return", "성과"),
+    ColumnDef("perf_1y", "1년수익", "1Y Return", "성과"),
+    ColumnDef("perf_ytd", "YTD수익", "YTD Return", "성과"),
+    // 스코어
+    ColumnDef("score_value", "밸류점수", "Value Score", "스코어"),
+    ColumnDef("score_quality", "퀄리티점수", "Quality Score", "스코어"),
+    ColumnDef("score_momentum", "모멘텀점수", "Momentum Score", "스코어"),
+    ColumnDef("score_growth", "성장점수", "Growth Score", "스코어"),
+    ColumnDef("score_total", "종합점수", "Total Score", "스코어"),
+    // DCF
+    ColumnDef("dcf_value", "DCF가치", "DCF Value", "DCF"),
+    ColumnDef("dcf_upside_pct", "DCF괴리", "DCF Upside", "DCF"),
+    // ETF
+    ColumnDef("expense_ratio", "보수율", "Expense Ratio", "ETF"),
+    ColumnDef("aum", "순자산", "AUM", "ETF"),
+    ColumnDef("index_tracked", "추종지수", "Index Tracked", "ETF"),
+    ColumnDef("asset_class", "자산군", "Asset Class", "ETF"),
+)
+
+val COLUMN_MAP: Map<String, ColumnDef> = COLUMN_DEFS.associateBy { it.key }

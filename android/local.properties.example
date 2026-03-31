@@ -1,0 +1,8 @@
+# Supabase 설정 — local.properties에 복사 후 실제 값으로 교체
+# local.properties는 .gitignore에 포함되어 커밋되지 않음
+
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+
+# SDK 경로 (Android Studio가 자동 생성)
+# sdk.dir=/path/to/android/sdk
