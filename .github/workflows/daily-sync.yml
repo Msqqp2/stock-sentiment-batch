@@ -41,6 +41,27 @@ jobs:
         if: steps.holiday_check.outputs.is_trading_day == 'false'
         run: echo "US market holiday — skipping today's batch."
 
+      - name: Send completion email
+        if: steps.sync_run.outcome == 'success'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "Stock Screener batch completed — ${{ github.run_id }}"
+          to: musiqq86@gmail.com
+          from: Stock Screener Bot <${{ secrets.GMAIL_USER }}>
+          body: |
+            Daily batch pipeline completed successfully.
+
+            Workflow: ${{ github.workflow }}
+            Run ID: ${{ github.run_id }}
+            Time (UTC): ${{ github.event.head_commit.timestamp || 'scheduled' }}
+
+            Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
       - name: Send failure email
         if: failure()
         uses: dawidd6/action-send-mail@v3
@@ -50,7 +71,7 @@ jobs:
           secure: true
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          subject: "Stock Screener batch failed — ${{ github.run_id }}"
+          subject: "Stock Screener batch FAILED — ${{ github.run_id }}"
           to: musiqq86@gmail.com
           from: Stock Screener Bot <${{ secrets.GMAIL_USER }}>
           body: |
