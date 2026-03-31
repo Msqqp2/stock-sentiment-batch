@@ -69,6 +69,20 @@ fun DetailScreen(
                             fontSize = 16.sp,
                             fontFamily = Pretendard,
                         )
+                        // 날짜 표시 (yy.MM.dd 종가)
+                        equity.dataDate?.let { date ->
+                            val short = try {
+                                val parts = date.split("-")
+                                "${parts[0].takeLast(2)}.${parts[1]}.${parts[2]}"
+                            } catch (_: Exception) { date }
+                            Spacer(Modifier.width(3.dp))
+                            Text(
+                                text = "($short 종가)",
+                                fontSize = 9.sp,
+                                fontFamily = Pretendard,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                         Spacer(Modifier.width(4.dp))
                         val changePct = equity.changePct
                         val color = when {
