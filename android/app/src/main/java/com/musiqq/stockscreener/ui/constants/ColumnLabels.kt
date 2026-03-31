@@ -15,10 +15,16 @@ val COLUMN_DEFS = listOf(
     ColumnDef("sector", "섹터", "Sector", "기본"),
     ColumnDef("industry", "산업", "Industry", "기본"),
     ColumnDef("asset_type", "자산유형", "Asset Type", "기본"),
+    ColumnDef("country", "국가", "Country", "기본"),
     // 시세
     ColumnDef("price", "현재가", "Price", "시세"),
+    ColumnDef("open_price", "시가", "Open", "시세"),
+    ColumnDef("day_high", "고가", "Day High", "시세"),
+    ColumnDef("day_low", "저가", "Day Low", "시세"),
+    ColumnDef("prev_close", "전일종가", "Prev Close", "시세"),
     ColumnDef("change_pct", "등락률", "Change %", "시세"),
     ColumnDef("volume", "거래량", "Volume", "시세"),
+    ColumnDef("avg_volume_10d", "평균거래량", "Avg Vol(10D)", "시세"),
     ColumnDef("market_cap", "시가총액", "Market Cap", "시세"),
     ColumnDef("relative_volume", "상대거래량", "Rel. Volume", "시세"),
     ColumnDef("turnover", "회전율", "Turnover", "시세"),
@@ -32,11 +38,16 @@ val COLUMN_DEFS = listOf(
     ColumnDef("peg_ratio", "PEG", "PEG", "밸류에이션"),
     ColumnDef("eps_ttm", "EPS", "EPS (TTM)", "밸류에이션"),
     ColumnDef("graham_number", "그레이엄", "Graham #", "밸류에이션"),
+    ColumnDef("pfcf_ratio", "P/FCF", "P/FCF", "밸류에이션"),
+    ColumnDef("ev", "기업가치", "EV", "밸류에이션"),
+    ColumnDef("ev_revenue", "EV/매출", "EV/Revenue", "밸류에이션"),
     // 배당
     ColumnDef("dividend_yield", "배당률", "Div. Yield", "배당"),
     ColumnDef("payout_ratio", "배당성향", "Payout Ratio", "배당"),
     ColumnDef("ex_dividend_date", "배당락일", "Ex-Div Date", "배당"),
     ColumnDef("shareholder_yield", "주주환원율", "Shareholder Yield", "배당"),
+    ColumnDef("dividend_rate", "주당배당금", "Div. Rate", "배당"),
+    ColumnDef("avg_dividend_yield_5y", "5년평균배당률", "5Y Avg Yield", "배당"),
     // 수익성
     ColumnDef("roe", "ROE", "ROE", "수익성"),
     ColumnDef("roa", "ROA", "ROA", "수익성"),
@@ -45,6 +56,13 @@ val COLUMN_DEFS = listOf(
     ColumnDef("operating_margin", "영업이익률", "Op. Margin", "수익성"),
     ColumnDef("net_margin", "순이익률", "Net Margin", "수익성"),
     ColumnDef("fcf_yield", "FCF수익률", "FCF Yield", "수익성"),
+    // 재무(절대값)
+    ColumnDef("total_revenue", "총매출", "Revenue", "재무"),
+    ColumnDef("ebitda", "EBITDA", "EBITDA", "재무"),
+    ColumnDef("free_cashflow", "잉여현금흐름", "FCF", "재무"),
+    ColumnDef("total_cash", "현금", "Cash", "재무"),
+    ColumnDef("total_debt", "총부채", "Total Debt", "재무"),
+    ColumnDef("book_value", "주당순자산", "Book Value", "재무"),
     // 성장
     ColumnDef("revenue_growth", "매출성장률", "Rev. Growth", "성장"),
     ColumnDef("earnings_growth", "이익성장률", "Earn. Growth", "성장"),
@@ -55,6 +73,8 @@ val COLUMN_DEFS = listOf(
     ColumnDef("quick_ratio", "당좌비율", "Quick Ratio", "재무안정성"),
     ColumnDef("interest_coverage", "이자보상배율", "Int. Coverage", "재무안정성"),
     ColumnDef("debt_growth", "부채증가율", "Debt Growth", "재무안정성"),
+    ColumnDef("piotroski_score", "피오트로스키", "F-Score", "재무안정성"),
+    ColumnDef("altman_z_score", "알트만Z", "Z-Score", "재무안정성"),
     // 기술적
     ColumnDef("rsi_14", "RSI(14)", "RSI(14)", "기술적"),
     ColumnDef("ma50", "50일선", "MA(50)", "기술적"),
@@ -75,17 +95,28 @@ val COLUMN_DEFS = listOf(
     ColumnDef("pct_from_52l", "저가괴리", "% from 52L", "기술적"),
     ColumnDef("sma50_div", "50일괴리", "SMA50 Div.", "기술적"),
     ColumnDef("sma200_div", "200일괴리", "SMA200 Div.", "기술적"),
+    ColumnDef("macd_hist", "MACD히스토", "MACD Hist", "기술적"),
+    ColumnDef("volatility_w", "주간변동성", "Vol(W)", "기술적"),
+    ColumnDef("volatility_m", "월간변동성", "Vol(M)", "기술적"),
     // 수급
     ColumnDef("short_pct_float", "공매도비율", "Short % Float", "수급"),
     ColumnDef("insider_buy_3m", "내부자매수", "Insider Buys(3M)", "수급"),
     ColumnDef("insider_sell_3m", "내부자매도", "Insider Sells(3M)", "수급"),
     ColumnDef("insider_latest_type", "최근내부자", "Last Insider", "수급"),
+    ColumnDef("insider_net_shares", "순매수주식", "Net Shares", "수급"),
+    ColumnDef("insider_pct", "내부자보유", "Insider Own.", "수급"),
     ColumnDef("inst_ownership", "기관보유", "Inst. Own.", "수급"),
+    ColumnDef("shares_outstanding", "발행주식수", "Shares Out", "수급"),
+    ColumnDef("float_shares", "유통주식수", "Float", "수급"),
+    ColumnDef("shares_short", "공매도주식수", "Short Shares", "수급"),
+    ColumnDef("short_ratio", "숏레이시오", "Short Ratio", "수급"),
     // 애널리스트
     ColumnDef("analyst_rating", "투자의견", "Rating", "애널리스트"),
     ColumnDef("analyst_rating_score", "의견점수", "Rating Score", "애널리스트"),
     ColumnDef("analyst_count", "애널리스트수", "# Analysts", "애널리스트"),
     ColumnDef("target_mean", "목표가", "Target Mean", "애널리스트"),
+    ColumnDef("target_high", "목표가(최고)", "Target High", "애널리스트"),
+    ColumnDef("target_low", "목표가(최저)", "Target Low", "애널리스트"),
     ColumnDef("target_upside_pct", "목표괴리", "Target Upside", "애널리스트"),
     // 성과
     ColumnDef("perf_1w", "1주수익", "1W Return", "성과"),
@@ -94,6 +125,8 @@ val COLUMN_DEFS = listOf(
     ColumnDef("perf_6m", "6달수익", "6M Return", "성과"),
     ColumnDef("perf_1y", "1년수익", "1Y Return", "성과"),
     ColumnDef("perf_ytd", "YTD수익", "YTD Return", "성과"),
+    // 소셜
+    ColumnDef("social_score", "소셜점수", "Social Score", "소셜"),
     // 스코어
     ColumnDef("score_value", "밸류점수", "Value Score", "스코어"),
     ColumnDef("score_quality", "퀄리티점수", "Quality Score", "스코어"),
@@ -108,6 +141,8 @@ val COLUMN_DEFS = listOf(
     ColumnDef("aum", "순자산", "AUM", "ETF"),
     ColumnDef("index_tracked", "추종지수", "Index Tracked", "ETF"),
     ColumnDef("asset_class", "자산군", "Asset Class", "ETF"),
+    ColumnDef("nav", "NAV", "NAV", "ETF"),
+    ColumnDef("holdings_count", "보유종목수", "Holdings", "ETF"),
 )
 
 val COLUMN_MAP: Map<String, ColumnDef> = COLUMN_DEFS.associateBy { it.key }
