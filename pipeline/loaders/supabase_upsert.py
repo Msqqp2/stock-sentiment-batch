@@ -264,6 +264,7 @@ def upsert_etf_profile(supabase, records: list[dict]):
         "avg_volume_10d": "avg_volume_10d",
         "week52_high": "week52_high",
         "week52_low": "week52_low",
+        "inception_date": "inception_date",
     }
 
     etf_rows = []

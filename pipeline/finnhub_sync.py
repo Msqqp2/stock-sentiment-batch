@@ -1,5 +1,5 @@
 """
-Finnhub Sentiment + Insider MSPR + Recommendation 수집 (repo-B daily).
+Finnhub Sentiment + Insider + Recommendation 수집 (repo-B daily).
 500종목 × 4 엔드포인트 = 2,000건/일, ~33분.
 """
 
@@ -98,6 +98,22 @@ def fetch_insider_sentiment(symbol: str) -> dict:
     }
 
 
+def fetch_insider_transactions(symbol: str) -> dict:
+    """내부자 거래 내역 (Form 3, 4, 5 기반)."""
+    data = _fh_get("/stock/insider-transactions", {"symbol": symbol})
+    if not data or not data.get("data"):
+        return {}
+
+    txns = data["data"]
+    buys = sum(1 for t in txns if t.get("change", 0) > 0)
+    sells = sum(1 for t in txns if t.get("change", 0) < 0)
+
+    return {
+        "fh_insider_buy_count": buys,
+        "fh_insider_sell_count": sells,
+    }
+
+
 def fetch_recommendation(symbol: str) -> dict:
     """애널리스트 투자의견 (Finnhub)."""
     data = _fh_get("/stock/recommendation", {"symbol": symbol})
@@ -154,16 +170,17 @@ def main():
         time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
         api_calls += 1
 
+        txns = fetch_insider_transactions(sym)
+        time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
+        api_calls += 1
+
         rec = fetch_recommendation(sym)
         time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
         api_calls += 1
 
-        # Insider Transactions는 MSPR에 포함되므로 별도 호출 불필요
-        # (MSPR이 내부자 매수/매도 비율을 집계한 지표)
-        api_calls += 0  # 3 endpoints per symbol (social, mspr, rec)
-
         row.update(social)
         row.update(mspr)
+        row.update(txns)
         row.update(rec)
 
         has_data = any(

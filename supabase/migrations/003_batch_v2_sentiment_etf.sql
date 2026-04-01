@@ -15,6 +15,8 @@ ALTER TABLE latest_equities ADD COLUMN IF NOT EXISTS fh_rec_sell INT;
 ALTER TABLE latest_equities ADD COLUMN IF NOT EXISTS fh_rec_strong_buy INT;
 ALTER TABLE latest_equities ADD COLUMN IF NOT EXISTS fh_rec_strong_sell INT;
 ALTER TABLE latest_equities ADD COLUMN IF NOT EXISTS fh_rec_period TEXT;
+ALTER TABLE latest_equities ADD COLUMN IF NOT EXISTS fh_insider_buy_count INT;
+ALTER TABLE latest_equities ADD COLUMN IF NOT EXISTS fh_insider_sell_count INT;
 ALTER TABLE latest_equities ADD COLUMN IF NOT EXISTS fh_asof TIMESTAMPTZ;
 
 -- ── 2. latest_equities: StockGeist 컬럼 추가 ──
