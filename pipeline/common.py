@@ -26,20 +26,34 @@ from pipeline.loaders.supabase_upsert import get_supabase_client
 logger = logging.getLogger(__name__)
 
 
+def _paginated_select(supabase, table: str, columns: str, filters: dict, page_size: int = 1000) -> list:
+    """Supabase 1000행 제한을 우회하는 페이지네이션 조회."""
+    all_rows = []
+    offset = 0
+    while True:
+        q = supabase.table(table).select(columns)
+        for col, val in filters.items():
+            q = q.eq(col, val)
+        resp = q.range(offset, offset + page_size - 1).execute()
+        batch = resp.data or []
+        all_rows.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    return all_rows
+
+
 def get_sentiment_symbols(supabase, top_n: int) -> list[str]:
     """
     Sentiment 수집 대상 주식 선정.
     조건: 보통주만, ETF/우선주/워런트/유닛/Rights 제외, 거래대금 내림차순.
     """
     try:
-        resp = (
-            supabase.table("latest_equities")
-            .select("symbol, price, volume, asset_type, name")
-            .eq("is_delisted", False)
-            .eq("asset_type", "stock")
-            .execute()
+        rows = _paginated_select(
+            supabase, "latest_equities",
+            "symbol, price, volume, asset_type, name",
+            {"is_delisted": False, "asset_type": "stock"},
         )
-        rows = resp.data or []
     except Exception as e:
         logger.error(f"[Common] 종목 조회 실패: {e}")
         return []
@@ -71,14 +85,11 @@ def get_etf_symbols(supabase, top_n: int) -> list[str]:
     조건: ETF, 미상장폐지, 거래대금 내림차순.
     """
     try:
-        resp = (
-            supabase.table("latest_equities")
-            .select("symbol, price, volume")
-            .eq("is_delisted", False)
-            .eq("asset_type", "etf")
-            .execute()
+        rows = _paginated_select(
+            supabase, "latest_equities",
+            "symbol, price, volume",
+            {"is_delisted": False, "asset_type": "etf"},
         )
-        rows = resp.data or []
     except Exception as e:
         logger.error(f"[Common] ETF 조회 실패: {e}")
         return []
