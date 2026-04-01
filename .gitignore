@@ -28,7 +28,9 @@ Thumbs.db
 local.properties
 *.jks
 *.keystore
+android/StockScreener
 google-services.json
+*-firebase-adminsdk-*.json
 app/build/
 build/
 .gradle/
