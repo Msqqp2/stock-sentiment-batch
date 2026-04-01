@@ -31,7 +31,7 @@ fun FinancialTab(equity: Equity) {
             DataRow("ROIC", NumberFormatter.formatPct(dto?.roic))
             DataRow("매출총이익률", NumberFormatter.formatPct(dto?.grossMargin))
             DataRow("영업이익률", NumberFormatter.formatPct(dto?.operatingMargin))
-            DataRow("순이익률", NumberFormatter.formatPct(dto?.netMargin))
+            DataRow("순이익률", NumberFormatter.formatPct(dto?.profitMargin))
             DataRow("FCF수익률", NumberFormatter.formatPct(dto?.fcfYield))
         }
 
