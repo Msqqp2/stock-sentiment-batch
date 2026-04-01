@@ -161,11 +161,7 @@ def main():
     for i, sym in enumerate(symbols):
         row = {"symbol": sym, "fh_asof": now_ts}
 
-        # 4개 엔드포인트 호출
-        social = fetch_social_sentiment(sym)
-        time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
-        api_calls += 1
-
+        # 3개 엔드포인트 호출 (social sentiment 제거 — Finnhub 무료플랜 데이터 미제공)
         mspr = fetch_insider_sentiment(sym)
         time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
         api_calls += 1
@@ -178,14 +174,13 @@ def main():
         time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
         api_calls += 1
 
-        row.update(social)
         row.update(mspr)
         row.update(txns)
         row.update(rec)
 
         has_data = any(
             row.get(k) is not None
-            for k in ("fh_social_sentiment", "fh_insider_mspr", "fh_rec_buy")
+            for k in ("fh_insider_mspr", "fh_rec_buy")
         )
 
         if has_data:
