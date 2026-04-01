@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +54,7 @@ fun SearchScreen(
     val results by viewModel.results.collectAsState()
     val defaultItems by viewModel.defaultItems.collectAsState()
     val isLoadingDefault by viewModel.isLoadingDefault.collectAsState()
+    val assetType by viewModel.assetType.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Search input
@@ -74,6 +76,23 @@ fun SearchScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             textStyle = MaterialTheme.typography.bodyLarge,
         )
+
+        // Stock / ETF 구분 칩
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = assetType == "stock",
+                onClick = { viewModel.switchAssetType("stock") },
+                label = { Text("Stock") },
+            )
+            FilterChip(
+                selected = assetType == "etf",
+                onClick = { viewModel.switchAssetType("etf") },
+                label = { Text("ETF") },
+            )
+        }
 
         if (query.length >= 2) {
             // 검색 모드

@@ -28,6 +28,10 @@ class SearchViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    // Asset type (Stock / ETF)
+    private val _assetType = MutableStateFlow("stock")
+    val assetType: StateFlow<String> = _assetType.asStateFlow()
+
     // 기본 종목 리스트 (검색어 없을 때 표시)
     private val _defaultItems = MutableStateFlow<List<Equity>>(emptyList())
     val defaultItems: StateFlow<List<Equity>> = _defaultItems.asStateFlow()
@@ -45,11 +49,25 @@ class SearchViewModel @Inject constructor(
         loadDefaultPage()
     }
 
+    fun switchAssetType(type: String) {
+        if (_assetType.value == type) return
+        _assetType.value = type
+        _defaultItems.value = emptyList()
+        defaultPage = 0
+        defaultHasMore = true
+        loadDefaultPage()
+    }
+
     private fun loadDefaultPage() {
         viewModelScope.launch {
             _isLoadingDefault.value = true
             try {
-                val criteria = FilterCriteria(limit = pageSize, offset = 0)
+                val criteria = FilterCriteria(
+                    assetType = _assetType.value,
+                    orderBy = "turnover",
+                    limit = pageSize,
+                    offset = 0,
+                )
                 val items = repository.getEquities(criteria)
                 _defaultItems.value = items
                 defaultHasMore = items.size >= pageSize
@@ -69,6 +87,8 @@ class SearchViewModel @Inject constructor(
             try {
                 val nextPage = defaultPage + 1
                 val criteria = FilterCriteria(
+                    assetType = _assetType.value,
+                    orderBy = "turnover",
                     limit = pageSize,
                     offset = nextPage * pageSize,
                 )
