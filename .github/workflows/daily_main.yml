@@ -7,6 +7,7 @@ on:
 
 jobs:
   sync:
+    if: github.repository_owner == 'Msqqp'
     runs-on: ubuntu-latest
     timeout-minutes: 240        # 월요일 Info 실행 시 ~219분
 
