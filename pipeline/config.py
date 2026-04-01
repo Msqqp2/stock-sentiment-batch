@@ -20,14 +20,14 @@ YFINANCE_SLEEP_BETWEEN = 2
 YFINANCE_MAX_RETRIES = 3
 YFINANCE_RETRY_BACKOFF = 30
 YFINANCE_INFO_SLEEP = 2  # Ticker.info 호출 간격 (초)
+YFINANCE_INFO_TOP_N = 3000  # 월요일 Info 수집 대상 (ETF 포함)
+
+# ── 기술적 지표 설정 ──
+TECHNICALS_TOP_N = 5000  # 거래대금 상위 보통주 (ETF 제외)
 
 # ── FMP 설정 (Free 플랜: 개별 quote/profile만 사용) ──
 FMP_DAILY_LIMIT = 250
 
-# ── EDGAR 설정 ──
-EDGAR_HEADERS = {"User-Agent": "StockScreener musiqq86@gmail.com"}
-EDGAR_RATE_LIMIT_SLEEP = 0.15  # ~7 req/s (10 req/s 한도)
-EDGAR_TOP_N = 1000  # Form 4 수집 대상 종목 수
 
 # ── Supabase UPSERT 설정 ──
 UPSERT_CHUNK_SIZE = 500
@@ -50,18 +50,34 @@ PRIORITY_TICKERS = [
     "BWXT", "CCJ", "UEC", "DNN",       # 우라늄/원자력
 ]
 
-# ── X Sentiment API (Nice-to-Have) ──
-X_SENTIMENT_BASE = os.environ.get("X_SENTIMENT_BASE", "https://adanos.org/x-stock-sentiment/v1")
-X_SENTIMENT_KEY = os.environ.get("X_SENTIMENT_KEY", "")
-X_SENTIMENT_HEALTH_TIMEOUT = 10
-X_SENTIMENT_MAX_CONSECUTIVE_FAILURES = 3
-
-# ── ETF 롤링 배치 ──
-ETF_TIER1_COUNT = 300
-ETF_TIER2_COUNT = 700
 
 # ── 심화 재무 ──
 DEEP_FINANCIAL_TOP_N = 500
+
+# ── Finnhub API ──
+FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
+FINNHUB_BASE_URL = "https://finnhub.io/api/v1"
+FINNHUB_RATE_LIMIT_SLEEP = 1.05  # 60 req/min → ~1초 간격
+FINNHUB_SENTIMENT_TOP_N = 500
+FINNHUB_ETF_TOP_N = 200
+
+# ── StockGeist API ──
+STOCKGEIST_TOKEN = os.environ.get("STOCKGEIST_TOKEN", "")
+STOCKGEIST_BASE_URL = "https://api.stockgeist.ai/v2"
+STOCKGEIST_TOP_N = 2000
+
+# ── Adanos Polymarket API ──
+ADANOS_API_KEY = os.environ.get("ADANOS_API_KEY", "")
+ADANOS_BASE_URL = "https://api.adanos.org/polymarket/stocks/v1"
+ADANOS_TOP_N = 500
+ADANOS_BATCH_SIZE = 10  # /compare 1회 최대 10종목
+
+# ── SMTP 이메일 알림 ──
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+EMAIL_TO = os.environ.get("EMAIL_TO", "musiqq86@gmail.com")
 
 # ── 대상 거래소 ──
 TARGET_EXCHANGES = {"NYSE", "NASDAQ", "AMEX"}

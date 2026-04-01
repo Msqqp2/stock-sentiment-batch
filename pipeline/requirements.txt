@@ -1,6 +1,7 @@
 # 데이터 수집
 yfinance>=0.2.36
 requests>=2.31.0
+finnhub-python>=2.4.19
 
 # 데이터 처리
 pandas>=2.2.0

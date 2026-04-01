@@ -246,6 +246,175 @@ def cleanup_fmp_cache(supabase):
         logger.warning(f"[UPSERT] fmp_cache 정리 실패: {e}")
 
 
+def upsert_etf_profile(supabase, records: list[dict]):
+    """latest_equities의 ETF 데이터를 etf_profile 테이블로 복사."""
+    COL_MAP = {
+        "symbol": "symbol",
+        "name": "name",
+        "fund_family": "fund_family",
+        "category": "category",
+        "expense_ratio": "expense_ratio",
+        "total_assets": "total_assets",
+        "dividend_yield": "yield",
+        "beta": "beta_3y",
+        "price": "price",
+        "prev_close": "prev_close",
+        "change_pct": "change_pct",
+        "volume": "volume",
+        "avg_volume_10d": "avg_volume_10d",
+        "week52_high": "week52_high",
+        "week52_low": "week52_low",
+    }
+
+    etf_rows = []
+    now_ts = datetime.now(timezone.utc).isoformat()
+    for rec in records:
+        if not rec.get("symbol"):
+            continue
+        row = {"asof": now_ts}
+        for src_col, dst_col in COL_MAP.items():
+            val = rec.get(src_col)
+            if val is not None:
+                row[dst_col] = val
+        etf_rows.append(row)
+
+    if not etf_rows:
+        return
+
+    for i in range(0, len(etf_rows), UPSERT_CHUNK_SIZE):
+        chunk = etf_rows[i : i + UPSERT_CHUNK_SIZE]
+        try:
+            supabase.table("etf_profile").upsert(
+                chunk, on_conflict="symbol"
+            ).execute()
+        except Exception as e:
+            logger.warning(f"[UPSERT] etf_profile 실패: {e}")
+
+    logger.info(f"[UPSERT] etf_profile: {len(etf_rows)}건 완료")
+
+
+def upsert_etf_holdings(supabase, etf_symbol: str, holdings: list[dict]):
+    """ETF 구성종목을 etf_holdings 테이블에 교체 적재."""
+    try:
+        supabase.table("etf_holdings").delete().eq(
+            "etf_symbol", etf_symbol
+        ).execute()
+    except Exception:
+        pass
+
+    if not holdings:
+        return
+
+    now_ts = datetime.now(timezone.utc).isoformat()
+    rows = [
+        {
+            "etf_symbol": etf_symbol,
+            "holding_symbol": h.get("symbol"),
+            "holding_name": h.get("name"),
+            "weight": h.get("percent"),
+            "shares": h.get("share"),
+            "market_value": h.get("value"),
+            "asof": now_ts,
+        }
+        for h in holdings
+    ]
+
+    for i in range(0, len(rows), UPSERT_CHUNK_SIZE):
+        chunk = rows[i : i + UPSERT_CHUNK_SIZE]
+        try:
+            supabase.table("etf_holdings").upsert(
+                chunk, on_conflict="etf_symbol,holding_symbol"
+            ).execute()
+        except Exception as e:
+            logger.warning(f"[UPSERT] etf_holdings ({etf_symbol}) 실패: {e}")
+
+
+def upsert_etf_sector_exposure(supabase, etf_symbol: str, sectors: list[dict]):
+    """ETF 섹터 비중을 etf_sector_exposure 테이블에 교체 적재."""
+    try:
+        supabase.table("etf_sector_exposure").delete().eq(
+            "etf_symbol", etf_symbol
+        ).execute()
+    except Exception:
+        pass
+
+    if not sectors:
+        return
+
+    now_ts = datetime.now(timezone.utc).isoformat()
+    rows = [
+        {
+            "etf_symbol": etf_symbol,
+            "sector": s.get("sector"),
+            "weight": s.get("weight"),
+            "asof": now_ts,
+        }
+        for s in sectors
+    ]
+
+    try:
+        supabase.table("etf_sector_exposure").upsert(
+            rows, on_conflict="etf_symbol,sector"
+        ).execute()
+    except Exception as e:
+        logger.warning(f"[UPSERT] etf_sector_exposure ({etf_symbol}) 실패: {e}")
+
+
+def upsert_etf_country_exposure(supabase, etf_symbol: str, countries: list[dict]):
+    """ETF 국가 비중을 etf_country_exposure 테이블에 교체 적재."""
+    try:
+        supabase.table("etf_country_exposure").delete().eq(
+            "etf_symbol", etf_symbol
+        ).execute()
+    except Exception:
+        pass
+
+    if not countries:
+        return
+
+    now_ts = datetime.now(timezone.utc).isoformat()
+    rows = [
+        {
+            "etf_symbol": etf_symbol,
+            "country": c.get("country"),
+            "weight": c.get("percentage"),
+            "asof": now_ts,
+        }
+        for c in countries
+    ]
+
+    try:
+        supabase.table("etf_country_exposure").upsert(
+            rows, on_conflict="etf_symbol,country"
+        ).execute()
+    except Exception as e:
+        logger.warning(f"[UPSERT] etf_country_exposure ({etf_symbol}) 실패: {e}")
+
+
+def upsert_etf_list_cache(supabase, etf_list: list[dict]):
+    """Finnhub ETF 지원 목록 캐싱 (월 1회)."""
+    now_ts = datetime.now(timezone.utc).isoformat()
+    rows = [
+        {"symbol": e.get("symbol"), "name": e.get("description", ""), "cached_at": now_ts}
+        for e in etf_list
+        if e.get("symbol")
+    ]
+
+    if not rows:
+        return
+
+    for i in range(0, len(rows), UPSERT_CHUNK_SIZE):
+        chunk = rows[i : i + UPSERT_CHUNK_SIZE]
+        try:
+            supabase.table("etf_list_cache").upsert(
+                chunk, on_conflict="symbol"
+            ).execute()
+        except Exception as e:
+            logger.warning(f"[UPSERT] etf_list_cache 실패: {e}")
+
+    logger.info(f"[UPSERT] etf_list_cache: {len(rows)}건 캐싱 완료")
+
+
 def mark_delisted(supabase, active_symbols: set[str]):
     """Universe에 없는 종목을 상장폐지 마킹. 안전장치 포함."""
     try:

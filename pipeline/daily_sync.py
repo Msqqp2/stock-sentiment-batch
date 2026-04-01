@@ -1,14 +1,14 @@
 """
-메인 오케스트레이터 — 매일 배치 파이프라인.
-① Universe Sync (NASDAQ Trader) → ② yfinance Bulk → ⑤ 애널리스트 →
-⑥ EDGAR → ⑧ 심화재무 → ⑨ 기술적 → ⑩ Performance
-→ Scoring → UPSERT → Sanity Check
+메인 오케스트레이터 — 매일 배치 파이프라인 (repo-A).
+① Universe Sync → ② 가격 벌크 → ② Info (월요일만) →
+⑧ 심화재무 → ⑨ 기술적 → ⑩ Performance →
+Scoring → UPSERT → ETF Profile 복사 → Sanity Check
 """
 
 import logging
 import sys
 import time
-from datetime import date, datetime, timedelta
+from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -16,24 +16,17 @@ from dotenv import load_dotenv
 # .env 파일 로드 (프로젝트 루트 기준)
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-from pipeline.config import DEEP_FINANCIAL_TOP_N
+from pipeline.config import DEEP_FINANCIAL_TOP_N, TECHNICALS_TOP_N, YFINANCE_INFO_TOP_N
 from pipeline.loaders.supabase_upsert import (
     cleanup_fmp_cache,
     get_supabase_client,
     mark_delisted,
-    update_insider_aggregates,
     upsert_equities,
-    upsert_insider_trades,
-)
-from pipeline.sources.edgar_13f import check_new_13f_filings, is_13f_season
-from pipeline.sources.edgar_insider import (
-    batch_collect_insider_trades,
-    load_cik_mapping,
+    upsert_etf_profile,
 )
 from pipeline.sources.fmp_client import FMPClient
 from pipeline.sources.priority_builder import build_daily_priority_list
 from pipeline.sources.universe import fetch_universe
-from pipeline.sources.x_sentiment import batch_scrape_weekly
 from pipeline.sources.yfinance_bulk import (
     fetch_bulk_prices,
     fetch_price_history,
@@ -42,7 +35,6 @@ from pipeline.sources.yfinance_bulk import (
 from pipeline.transforms.compute import compute_derived_fields
 from pipeline.transforms.deep_financials import batch_deep_financials
 from pipeline.transforms.freshness import compute_freshness_dates
-from pipeline.transforms.insider_agg import aggregate_insider_trades
 from pipeline.transforms.merge import merge_universe_with_prices
 from pipeline.transforms.scoring import compute_scores
 from pipeline.transforms.technicals import compute_performance, compute_technicals
@@ -93,10 +85,15 @@ def main():
         priority_list = list(price_data.keys())[:2000]
     step_timings["② Priority 빌드"] = time.time() - t0
 
-    # ② yfinance Ticker.info (우선 티커 중 상위 500만 — 나머지는 enrich_only로)
+    # ② yfinance Ticker.info (월요일만 실행, 3,000건 — ETF 포함)
     t0 = time.time()
-    info_data = fetch_ticker_info(priority_list[:500])
-    step_timings["② yfinance Info"] = time.time() - t0
+    if today.weekday() == 0:  # Monday
+        info_data = fetch_ticker_info(priority_list[:YFINANCE_INFO_TOP_N])
+        step_timings["② yfinance Info"] = time.time() - t0
+    else:
+        info_data = {}
+        step_timings["② yfinance Info"] = time.time() - t0
+        logger.info("[yfinance] Info — 월요일만 실행 (스킵)")
 
     # ── 데이터 병합 ──
     t0 = time.time()
@@ -109,10 +106,18 @@ def main():
 
     step_timings["병합+산출"] = time.time() - t0
 
-    # ── ⑨ 기술적 지표 + ⑩ Performance ──
+    # ── ⑨ 기술적 지표 + ⑩ Performance (거래대금 Top 5,000 보통주) ──
     t0 = time.time()
-    # 우선 티커만 히스토리 다운로드
-    history_data = fetch_price_history(priority_list[:1000])
+    stocks_for_tech = [
+        r for r in records
+        if r.get("asset_type") == "stock" and r.get("price") and r.get("volume")
+    ]
+    stocks_for_tech.sort(
+        key=lambda x: (x.get("price", 0) or 0) * (x.get("volume", 0) or 0),
+        reverse=True,
+    )
+    tech_symbols = [r["symbol"] for r in stocks_for_tech[:TECHNICALS_TOP_N]]
+    history_data = fetch_price_history(tech_symbols)
 
     symbol_to_record = {r["symbol"]: r for r in records}
     for sym, hist in history_data.items():
@@ -174,77 +179,14 @@ def main():
     mark_delisted(supabase, active_symbols)
     step_timings["UPSERT"] = time.time() - t0
 
-    # ── ④ ETF 롤링 배치 (FMP Free 제약으로 스킵) ──
-    # ETF Holdings/Info는 FMP 유료 전용. 추후 대안 소스 확보 시 활성화.
-    logger.info("[ETF] FMP Free 제약으로 ETF Holdings 배치 스킵")
-
     logger.info(f"[FMP] 총 요청 수: {fmp.get_request_count()}")
 
-    # ── ⑥ EDGAR 내부자 거래 ──
+    # ── ETF Profile 복사 (latest_equities → etf_profile) ──
     t0 = time.time()
-    try:
-        cik_map = load_cik_mapping()
-        # 상위 1000 종목만
-        top_1000 = [r["symbol"] for r in stocks_with_mcap[:1000]]
-        symbols_with_cik = {
-            sym: cik_map[sym]
-            for sym in top_1000
-            if sym in cik_map
-        }
-
-        trades = batch_collect_insider_trades(symbols_with_cik)
-        upsert_insider_trades(supabase, trades)
-
-        # 집계
-        agg = aggregate_insider_trades(trades)
-        update_insider_aggregates(supabase, agg)
-
-    except Exception as e:
-        logger.warning(f"[EDGAR] 내부자 거래 수집 실패: {e}")
-
-    # 13F 시즌 체크 (2/5/8/11월)
-    if is_13f_season():
-        try:
-            date_from = (today - timedelta(days=7)).isoformat()
-            new_13f = check_new_13f_filings(date_from)
-            if new_13f:
-                logger.info(f"[EDGAR 13F] 신규 {len(new_13f)}건 감지")
-        except Exception as e:
-            logger.warning(f"[EDGAR 13F] 확인 실패 (non-critical): {e}")
-
-    step_timings["⑥ EDGAR"] = time.time() - t0
-
-    # ── ⑦ X Sentiment (주간, 일요일만 실행) ──
-    t0 = time.time()
-    if today.weekday() == 6:  # Sunday
-        try:
-            top_250 = [r["symbol"] for r in stocks_with_mcap[:250]]
-            sentiment_result = batch_scrape_weekly(top_250, supabase)
-
-            if sentiment_result.get("data"):
-                for s_data in sentiment_result["data"]:
-                    rec = symbol_to_record.get(s_data["symbol"])
-                    if rec:
-                        rec.update(s_data)
-                # 센티먼트 업데이트된 레코드 재upsert
-                sentiment_records = [
-                    symbol_to_record[s["symbol"]]
-                    for s in sentiment_result["data"]
-                    if s["symbol"] in symbol_to_record
-                ]
-                if sentiment_records:
-                    upsert_equities(supabase, sentiment_records)
-
-            logger.info(
-                f"[XSentiment] {sentiment_result.get('collected', 0)}건 수집, "
-                f"{sentiment_result.get('failed', 0)}건 실패"
-            )
-        except Exception as e:
-            logger.warning(f"[XSentiment] 수집 실패 (non-critical): {e}")
-    else:
-        logger.info("[XSentiment] 주간 배치 — 일요일만 실행 (스킵)")
-
-    step_timings["⑦ X Sentiment"] = time.time() - t0
+    etf_records = [r for r in records if r.get("asset_type") == "etf"]
+    if etf_records:
+        upsert_etf_profile(supabase, etf_records)
+    step_timings["ETF Profile 복사"] = time.time() - t0
 
     # ── Sanity Check ──
     t0 = time.time()
