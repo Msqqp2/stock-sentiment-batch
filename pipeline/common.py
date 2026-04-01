@@ -127,8 +127,8 @@ def send_batch_email(subject: str, body: str):
 
 def is_us_trading_day() -> bool:
     """오늘이 미국 거래일인지 확인."""
-    from pipeline.utils.us_market_calendar import is_trading_day
-    return is_trading_day(date.today())
+    from pipeline.utils.us_market_calendar import is_us_trading_day
+    return is_us_trading_day(date.today())
 
 
 def rate_limit_sleep(seconds: float):
