@@ -73,18 +73,6 @@ fun AnalystTab(equity: Equity) {
             }
         }
 
-        // StockGeist
-        val hasSg = dto?.sgSentimentPos != null
-        if (hasSg) {
-            SectionCard("StockGeist") {
-                DataRow("SG긍정", NumberFormatter.formatRatio(dto?.sgSentimentPos))
-                DataRow("SG부정", NumberFormatter.formatRatio(dto?.sgSentimentNeg))
-                DataRow("SG중립", NumberFormatter.formatRatio(dto?.sgSentimentNeu))
-                DataRow("SG감성도", NumberFormatter.formatRatio(dto?.sgEmotionality))
-                DataRow("SG언급수", NumberFormatter.formatInt(dto?.sgMentionCount))
-            }
-        }
-
         // Polymarket
         val hasPm = dto?.pmBuzzScore != null || dto?.pmSentimentScore != null
         if (hasPm) {

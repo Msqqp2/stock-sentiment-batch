@@ -79,11 +79,6 @@ FINNHUB_RATE_LIMIT_SLEEP = 1.05  # 60 req/min → ~1초 간격
 FINNHUB_SENTIMENT_TOP_N = 500
 FINNHUB_ETF_TOP_N = 200
 
-# ── StockGeist API ──
-STOCKGEIST_TOKEN = os.environ.get("STOCKGEIST_TOKEN", "")
-STOCKGEIST_BASE_URL = "https://api.stockgeist.ai/v2"
-STOCKGEIST_TOP_N = 2000
-
 # ── Adanos Polymarket API ──
 ADANOS_API_KEY = os.environ.get("ADANOS_API_KEY", "")
 ADANOS_BASE_URL = "https://api.adanos.org/polymarket/stocks/v1"

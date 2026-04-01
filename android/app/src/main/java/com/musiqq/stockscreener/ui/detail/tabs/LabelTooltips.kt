@@ -190,13 +190,6 @@ RSI: Wilder의 상대강도지수
     "소셜긍정" to LabelTooltip("Positive Mentions", "소셜 미디어 긍정 언급 수 (Finnhub)"),
     "소셜부정" to LabelTooltip("Negative Mentions", "소셜 미디어 부정 언급 수 (Finnhub)"),
 
-    // ── StockGeist ──
-    "SG긍정" to LabelTooltip("StockGeist Positive", "StockGeist 긍정 센티먼트 비율 (0~1)"),
-    "SG부정" to LabelTooltip("StockGeist Negative", "StockGeist 부정 센티먼트 비율 (0~1)"),
-    "SG중립" to LabelTooltip("StockGeist Neutral", "StockGeist 중립 센티먼트 비율 (0~1)"),
-    "SG감성도" to LabelTooltip("StockGeist Emotionality", "게시물의 감정적 강도 (0~1)"),
-    "SG언급수" to LabelTooltip("StockGeist Mention Count", "StockGeist 집계 소셜 미디어 언급 수"),
-
     // ── Polymarket ──
     "버즈점수" to LabelTooltip("Buzz Score", "Polymarket 관련 종목 화제성 점수"),
     "PM트렌드" to LabelTooltip("Polymarket Trend", "시장 센티먼트 방향 (상승/하락/보합)"),
