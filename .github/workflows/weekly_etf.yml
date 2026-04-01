@@ -22,8 +22,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r pipeline/requirements.txt
 
+      - name: Check US market holiday
+        id: holiday_check
+        run: python -m pipeline.utils.us_market_calendar
+
       - name: Run ETF sync
         id: sync_run
+        if: steps.holiday_check.outputs.is_trading_day == 'true'
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -34,6 +39,10 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
         run: python -m pipeline.etf_sync
+
+      - name: Skip message
+        if: steps.holiday_check.outputs.is_trading_day == 'false'
+        run: echo "US market holiday — skipping ETF sync."
 
       - name: Send failure email
         if: failure()

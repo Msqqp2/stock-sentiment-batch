@@ -51,6 +51,24 @@ PRIORITY_TICKERS = [
 ]
 
 
+# ── SEC EDGAR ──
+EDGAR_HEADERS = {
+    "User-Agent": "StockScreener/1.0 (musiqq86@gmail.com)",
+    "Accept-Encoding": "gzip, deflate",
+}
+EDGAR_RATE_LIMIT_SLEEP = 0.11  # 10 req/sec → ~0.1초 간격 (여유분 포함)
+EDGAR_TOP_N = 1000
+
+# ── X Sentiment API (Nice-to-Have) ──
+X_SENTIMENT_BASE = os.environ.get("X_SENTIMENT_BASE", "")
+X_SENTIMENT_KEY = os.environ.get("X_SENTIMENT_KEY", "")
+X_SENTIMENT_HEALTH_TIMEOUT = 10
+X_SENTIMENT_MAX_CONSECUTIVE_FAILURES = 3
+
+# ── ETF 롤링 배치 (FMP 예산 내 티어링) ──
+ETF_TIER1_COUNT = 300
+ETF_TIER2_COUNT = 700
+
 # ── 심화 재무 ──
 DEEP_FINANCIAL_TOP_N = 500
 

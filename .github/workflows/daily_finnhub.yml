@@ -2,7 +2,7 @@ name: Daily Finnhub Sentiment (repo-B)
 
 on:
   schedule:
-    - cron: '30 22 * * *'      # UTC 22:30 = KST 07:30
+    - cron: '30 22 * * 1-5'    # UTC 22:30 평일만 = KST 07:30
   workflow_dispatch:
 
 jobs:
@@ -22,8 +22,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r pipeline/requirements.txt
 
+      - name: Check US market holiday
+        id: holiday_check
+        run: python -m pipeline.utils.us_market_calendar
+
       - name: Run Finnhub sync
         id: sync_run
+        if: steps.holiday_check.outputs.is_trading_day == 'true'
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -34,6 +39,10 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
         run: python -m pipeline.finnhub_sync
+
+      - name: Skip message
+        if: steps.holiday_check.outputs.is_trading_day == 'false'
+        run: echo "US market holiday — skipping Finnhub sync."
 
       - name: Send failure email
         if: failure()
