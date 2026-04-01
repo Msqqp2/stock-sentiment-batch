@@ -18,15 +18,23 @@ def classify_etf_tiers(supabase) -> dict[str, list[str]]:
     Tier 2: 301~1000 (주 2회)
     Tier 3: 나머지 (주 1회)
     """
-    all_etfs = (
-        supabase.table("latest_equities")
-        .select("symbol, aum")
-        .eq("is_delisted", False)
-        .eq("asset_type", "etf")
-        .order("aum", desc=True)
-        .execute()
-        .data
-    )
+    all_etfs = []
+    offset = 0
+    while True:
+        batch = (
+            supabase.table("latest_equities")
+            .select("symbol, aum")
+            .eq("is_delisted", False)
+            .eq("asset_type", "etf")
+            .order("aum", desc=True)
+            .range(offset, offset + 999)
+            .execute()
+            .data
+        )
+        all_etfs.extend(batch)
+        if len(batch) < 1000:
+            break
+        offset += 1000
 
     symbols = [r["symbol"] for r in all_etfs]
     tiers = {

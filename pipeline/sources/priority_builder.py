@@ -40,15 +40,23 @@ def build_daily_priority_list(supabase) -> list[str]:
         .data
     )
 
-    # 3) 인기 산업 전종목
-    by_industry = (
-        supabase.table("latest_equities")
-        .select("symbol")
-        .eq("is_delisted", False)
-        .in_("industry", PRIORITY_INDUSTRIES)
-        .execute()
-        .data
-    )
+    # 3) 인기 산업 전종목 (1000행 초과 가능 → 페이지네이션)
+    by_industry = []
+    offset = 0
+    while True:
+        batch = (
+            supabase.table("latest_equities")
+            .select("symbol")
+            .eq("is_delisted", False)
+            .in_("industry", PRIORITY_INDUSTRIES)
+            .range(offset, offset + 999)
+            .execute()
+            .data
+        )
+        by_industry.extend(batch)
+        if len(batch) < 1000:
+            break
+        offset += 1000
 
     # 4) 하드코딩 필수 티커
     forced = PRIORITY_TICKERS

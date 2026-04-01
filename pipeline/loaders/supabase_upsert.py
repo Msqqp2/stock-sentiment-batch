@@ -419,13 +419,21 @@ def upsert_etf_list_cache(supabase, etf_list: list[dict]):
 def mark_delisted(supabase, active_symbols: set[str]):
     """Universe에 없는 종목을 상장폐지 마킹. 안전장치 포함."""
     try:
-        existing = (
-            supabase.table("latest_equities")
-            .select("symbol")
-            .eq("is_delisted", False)
-            .execute()
-            .data
-        )
+        existing = []
+        offset = 0
+        while True:
+            batch = (
+                supabase.table("latest_equities")
+                .select("symbol")
+                .eq("is_delisted", False)
+                .range(offset, offset + 999)
+                .execute()
+                .data
+            )
+            existing.extend(batch)
+            if len(batch) < 1000:
+                break
+            offset += 1000
         existing_symbols = {r["symbol"] for r in existing}
         to_delist = existing_symbols - active_symbols
 
