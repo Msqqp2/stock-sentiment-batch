@@ -1,6 +1,9 @@
 package com.musiqq.stockscreener.data.remote
 
 import com.musiqq.stockscreener.data.remote.dto.EquityDto
+import com.musiqq.stockscreener.data.remote.dto.EtfCountryExposureDto
+import com.musiqq.stockscreener.data.remote.dto.EtfHoldingDto
+import com.musiqq.stockscreener.data.remote.dto.EtfSectorExposureDto
 import com.musiqq.stockscreener.data.remote.dto.InsiderTradeDto
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -45,6 +48,28 @@ interface SupabaseApi {
         @Query("order") order: String = "txn_date.desc",
         @Query("limit") limit: Int = 10,
     ): List<InsiderTradeDto>
+
+    @GET("rest/v1/etf_holdings")
+    suspend fun getEtfHoldings(
+        @Query("etf_symbol") etfSymbol: String,
+        @Query("select") select: String = "etf_symbol,holding_symbol,holding_name,weight,shares,market_value",
+        @Query("order") order: String = "weight.desc.nullslast",
+        @Query("limit") limit: Int = 50,
+    ): List<EtfHoldingDto>
+
+    @GET("rest/v1/etf_sector_exposure")
+    suspend fun getEtfSectorExposure(
+        @Query("etf_symbol") etfSymbol: String,
+        @Query("select") select: String = "etf_symbol,sector,weight",
+        @Query("order") order: String = "weight.desc.nullslast",
+    ): List<EtfSectorExposureDto>
+
+    @GET("rest/v1/etf_country_exposure")
+    suspend fun getEtfCountryExposure(
+        @Query("etf_symbol") etfSymbol: String,
+        @Query("select") select: String = "etf_symbol,country,weight",
+        @Query("order") order: String = "weight.desc.nullslast",
+    ): List<EtfCountryExposureDto>
 
     @GET("rest/v1/latest_equities")
     suspend fun getHeatmapData(

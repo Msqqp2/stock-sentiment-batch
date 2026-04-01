@@ -143,11 +143,11 @@ def main():
         if r.get("asset_type") == "stock" and r.get("market_cap")
     ]
     stocks_with_mcap.sort(key=lambda x: x["market_cap"], reverse=True)
-    top_500_symbols = [
-        r["symbol"] for r in stocks_with_mcap[:DEEP_FINANCIAL_TOP_N]
-    ]
+    top_500 = stocks_with_mcap[:DEEP_FINANCIAL_TOP_N]
+    top_500_symbols = [r["symbol"] for r in top_500]
+    mcap_map = {r["symbol"]: r["market_cap"] for r in top_500}
 
-    deep_data = batch_deep_financials(top_500_symbols)
+    deep_data = batch_deep_financials(top_500_symbols, mcap_map)
     for d in deep_data:
         rec = symbol_to_record.get(d["symbol"])
         if rec:

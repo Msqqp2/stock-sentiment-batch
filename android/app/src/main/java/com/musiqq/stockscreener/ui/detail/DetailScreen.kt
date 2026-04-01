@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.musiqq.stockscreener.ui.detail.tabs.AnalystTab
+import com.musiqq.stockscreener.ui.detail.tabs.EtfCountryTab
+import com.musiqq.stockscreener.ui.detail.tabs.EtfHoldingsTab
+import com.musiqq.stockscreener.ui.detail.tabs.EtfSectorTab
 import com.musiqq.stockscreener.ui.detail.tabs.FinancialTab
 import com.musiqq.stockscreener.ui.detail.tabs.OverviewTab
 import com.musiqq.stockscreener.ui.detail.tabs.SupplyDemandTab
@@ -42,7 +45,8 @@ import com.musiqq.stockscreener.ui.theme.StockColors
 import com.musiqq.stockscreener.ui.utils.NumberFormatter
 import kotlinx.coroutines.launch
 
-private val TABS = listOf("개요", "재무", "수급", "애널리스트")
+private val STOCK_TABS = listOf("개요", "재무", "수급", "애널리스트")
+private val ETF_TABS = listOf("개요", "보유종목", "섹터", "국가")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +57,9 @@ fun DetailScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val stockColors = StockColors.current
-    val pagerState = rememberPagerState(pageCount = { TABS.size })
+    val isEtf = state.equity?.assetType.equals("etf", ignoreCase = true) == true
+    val tabs = if (isEtf) ETF_TABS else STOCK_TABS
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -133,7 +139,7 @@ fun DetailScreen(
             }
             state.equity != null -> {
                 TabRow(selectedTabIndex = pagerState.currentPage) {
-                    TABS.forEachIndexed { index, title ->
+                    tabs.forEachIndexed { index, title ->
                         Tab(
                             selected = pagerState.currentPage == index,
                             onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
@@ -147,11 +153,20 @@ fun DetailScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
                     val equity = state.equity!!
-                    when (page) {
-                        0 -> OverviewTab(equity)
-                        1 -> FinancialTab(equity)
-                        2 -> SupplyDemandTab(equity, state.insiderTrades)
-                        3 -> AnalystTab(equity)
+                    if (isEtf) {
+                        when (page) {
+                            0 -> OverviewTab(equity)
+                            1 -> EtfHoldingsTab(state.etfHoldings)
+                            2 -> EtfSectorTab(state.etfSectors)
+                            3 -> EtfCountryTab(state.etfCountries)
+                        }
+                    } else {
+                        when (page) {
+                            0 -> OverviewTab(equity)
+                            1 -> FinancialTab(equity)
+                            2 -> SupplyDemandTab(equity, state.insiderTrades)
+                            3 -> AnalystTab(equity)
+                        }
                     }
                 }
             }

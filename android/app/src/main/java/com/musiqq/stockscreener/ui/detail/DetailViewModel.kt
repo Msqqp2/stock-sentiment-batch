@@ -3,6 +3,9 @@ package com.musiqq.stockscreener.ui.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.musiqq.stockscreener.data.remote.dto.EtfCountryExposureDto
+import com.musiqq.stockscreener.data.remote.dto.EtfHoldingDto
+import com.musiqq.stockscreener.data.remote.dto.EtfSectorExposureDto
 import com.musiqq.stockscreener.data.remote.dto.InsiderTradeDto
 import com.musiqq.stockscreener.data.repository.EquityRepository
 import com.musiqq.stockscreener.data.repository.WatchlistRepository
@@ -18,6 +21,9 @@ import javax.inject.Inject
 data class DetailUiState(
     val equity: Equity? = null,
     val insiderTrades: List<InsiderTradeDto> = emptyList(),
+    val etfHoldings: List<EtfHoldingDto> = emptyList(),
+    val etfSectors: List<EtfSectorExposureDto> = emptyList(),
+    val etfCountries: List<EtfCountryExposureDto> = emptyList(),
     val isLoading: Boolean = true,
     val isWatchlisted: Boolean = false,
     val error: String? = null,
@@ -50,9 +56,24 @@ class DetailViewModel @Inject constructor(
                 } catch (_: Exception) {
                     emptyList()
                 }
+                // ETF 데이터 로딩
+                val isEtf = equity?.assetType.equals("etf", ignoreCase = true)
+                val holdings = if (isEtf) {
+                    try { equityRepository.getEtfHoldings(symbol) } catch (_: Exception) { emptyList() }
+                } else emptyList()
+                val sectors = if (isEtf) {
+                    try { equityRepository.getEtfSectorExposure(symbol) } catch (_: Exception) { emptyList() }
+                } else emptyList()
+                val countries = if (isEtf) {
+                    try { equityRepository.getEtfCountryExposure(symbol) } catch (_: Exception) { emptyList() }
+                } else emptyList()
+
                 _uiState.value = DetailUiState(
                     equity = equity,
                     insiderTrades = insiders,
+                    etfHoldings = holdings,
+                    etfSectors = sectors,
+                    etfCountries = countries,
                     isLoading = false,
                     isWatchlisted = isWatchlisted,
                 )

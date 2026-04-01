@@ -32,6 +32,15 @@ google-services.json
 app/build/
 build/
 .gradle/
+android/app/release/
+firebase_apk/
+
+# Office temp files
+~$*
+
+# Images / screenshots
+*.jpg
+*.png
 
 # Supabase
 supabase/.temp/

@@ -29,15 +29,31 @@ val LABEL_TOOLTIPS = mapOf(
     "주당배당금" to LabelTooltip("Dividend Rate", "연간 주당 배당금 (달러)"),
     "5년평균배당률" to LabelTooltip("5-Year Avg Dividend Yield", "최근 5년간 평균 배당수익률"),
 
+    // ── 개요 > 시세 추가 ──
+    "거래대금" to LabelTooltip("Dollar Volume (Turnover)", "주가 × 거래량\n일일 거래 금액 규모"),
+    "갭비율" to LabelTooltip("Gap %", "(시가 - 전일종가) / 전일종가 × 100\n장 시작 시 가격 점프 비율"),
+
     // ── 개요 > 기술적 지표 ──
     "RSI(14)" to LabelTooltip("Relative Strength Index (14)", "100 - 100 / (1 + 평균상승폭 / 평균하락폭)\n14일 기간, Wilder 지수이동평균 방식\n70 이상 과매수, 30 이하 과매도"),
+    "20일선" to LabelTooltip("20-Day Moving Average", "최근 20거래일 종가 평균\n단기 추세 판단 기준선"),
     "50일선" to LabelTooltip("50-Day Moving Average", "최근 50거래일 종가 평균"),
     "200일선" to LabelTooltip("200-Day Moving Average", "최근 200거래일 종가 평균"),
+    "50일괴리율" to LabelTooltip("50-Day SMA Divergence", "(현재가 - 50일선) / 50일선 × 100\n양수: 50일선 위, 음수: 50일선 아래"),
+    "200일괴리율" to LabelTooltip("200-Day SMA Divergence", "(현재가 - 200일선) / 200일선 × 100\n양수: 200일선 위, 음수: 200일선 아래"),
     "52주 고가" to LabelTooltip("52-Week High", "최근 52주간 최고가"),
     "52주 저가" to LabelTooltip("52-Week Low", "최근 52주간 최저가"),
     "고가괴리" to LabelTooltip("% from 52-Week High", "(현재가 - 52주고가) / 52주고가 × 100"),
-    "상대거래량" to LabelTooltip("Relative Volume", "당일 거래량 / 20일 평균 거래량"),
+    "저가괴리" to LabelTooltip("% from 52-Week Low", "(현재가 - 52주저가) / 52주저가 × 100"),
+    "MACD" to LabelTooltip("MACD Line", "EMA(12) - EMA(26)\n단기·장기 이동평균 차이로 추세 전환 감지"),
+    "MACD시그널" to LabelTooltip("MACD Signal Line", "MACD선의 9일 지수이동평균\nMACD가 시그널을 상향돌파 시 매수 신호"),
     "MACD히스토" to LabelTooltip("MACD Histogram", "MACD선 - 시그널선\n양수: 상승 모멘텀, 음수: 하락 모멘텀"),
+    "Stoch %K" to LabelTooltip("Stochastic %K", "(현재가 - 14일 최저가) / (14일 최고가 - 14일 최저가) × 100\n80 이상 과매수, 20 이하 과매도"),
+    "Stoch %D" to LabelTooltip("Stochastic %D", "%K의 3일 이동평균 (시그널선)\n%K가 %D를 상향돌파 시 매수 신호"),
+    "ADX(14)" to LabelTooltip("Average Directional Index (14)", "추세 강도 지표 (0~100)\n25 이상: 강한 추세, 20 이하: 비추세(횡보)"),
+    "CCI(20)" to LabelTooltip("Commodity Channel Index (20)", "(TP - 20일 SMA of TP) / (0.015 × 평균편차)\n+100 이상: 과매수, -100 이하: 과매도"),
+    "Williams %R" to LabelTooltip("Williams %R", "(14일 최고가 - 현재가) / (14일 최고가 - 14일 최저가) × -100\n-20 이상: 과매수, -80 이하: 과매도"),
+    "ATR(14)" to LabelTooltip("Average True Range (14)", "14일간 True Range의 평균\n높을수록 가격 변동 폭이 큼 (변동성 지표)"),
+    "상대거래량" to LabelTooltip("Relative Volume", "당일 거래량 / 20일 평균 거래량"),
     "주간변동성" to LabelTooltip("Weekly Volatility", "최근 1주간 수익률의 표준편차\n높을수록 가격 변동이 큼"),
     "월간변동성" to LabelTooltip("Monthly Volatility", "최근 1개월간 수익률의 표준편차\n높을수록 가격 변동이 큼"),
 
@@ -148,6 +164,43 @@ RSI: Wilder의 상대강도지수
     "소셜점수" to LabelTooltip("Social Sentiment Score", "X(구 트위터) 소셜 미디어 센티먼트 분석 점수\n주간 배치 수집 (일요일)"),
 
     // ── ETF 추가 ──
+    "AUM" to LabelTooltip("Assets Under Management", "ETF 총 운용자산 규모"),
     "NAV" to LabelTooltip("Net Asset Value", "ETF 1주당 순자산가치"),
     "보유종목수" to LabelTooltip("Holdings Count", "ETF가 보유한 총 종목 수"),
+    "추종지수" to LabelTooltip("Index Tracked", "ETF가 추종하는 기초 지수"),
+    "자산분류" to LabelTooltip("Asset Class", "ETF 자산 유형 (주식, 채권, 원자재 등)"),
+    "보수율" to LabelTooltip("Expense Ratio", "연간 운용보수 비율 (%)\n낮을수록 투자자에게 유리"),
+
+    // ── Finnhub 투자의견 ──
+    "FH 적극매수" to LabelTooltip("Finnhub Strong Buy", "Finnhub 집계 애널리스트 중 적극매수 의견 수"),
+    "FH 매수" to LabelTooltip("Finnhub Buy", "Finnhub 집계 애널리스트 중 매수 의견 수"),
+    "FH 보유" to LabelTooltip("Finnhub Hold", "Finnhub 집계 애널리스트 중 보유 의견 수"),
+    "FH 매도" to LabelTooltip("Finnhub Sell", "Finnhub 집계 애널리스트 중 매도 의견 수"),
+    "FH 적극매도" to LabelTooltip("Finnhub Strong Sell", "Finnhub 집계 애널리스트 중 적극매도 의견 수"),
+    "의견기간" to LabelTooltip("Recommendation Period", "Finnhub 투자의견 집계 기간"),
+
+    // ── Finnhub 내부자 ──
+    "MSPR" to LabelTooltip("Monthly Share Purchase Ratio", "내부자 순매수 비율 (Finnhub)\n양수: 순매수 우세, 음수: 순매도 우세"),
+    "내부자변동" to LabelTooltip("Insider Change", "내부자 보유 주식 수 변동 (Finnhub)"),
+    "FH매수건수" to LabelTooltip("Finnhub Insider Buy Count", "Finnhub 집계 내부자 매수 거래 건수"),
+    "FH매도건수" to LabelTooltip("Finnhub Insider Sell Count", "Finnhub 집계 내부자 매도 거래 건수"),
+
+    // ── 소셜 센티먼트 ──
+    "소셜센티먼트" to LabelTooltip("Finnhub Social Sentiment", "Reddit + Twitter 센티먼트 점수\n+1(매우 긍정) ~ -1(매우 부정)"),
+    "소셜긍정" to LabelTooltip("Positive Mentions", "소셜 미디어 긍정 언급 수 (Finnhub)"),
+    "소셜부정" to LabelTooltip("Negative Mentions", "소셜 미디어 부정 언급 수 (Finnhub)"),
+
+    // ── StockGeist ──
+    "SG긍정" to LabelTooltip("StockGeist Positive", "StockGeist 긍정 센티먼트 비율 (0~1)"),
+    "SG부정" to LabelTooltip("StockGeist Negative", "StockGeist 부정 센티먼트 비율 (0~1)"),
+    "SG중립" to LabelTooltip("StockGeist Neutral", "StockGeist 중립 센티먼트 비율 (0~1)"),
+    "SG감성도" to LabelTooltip("StockGeist Emotionality", "게시물의 감정적 강도 (0~1)"),
+    "SG언급수" to LabelTooltip("StockGeist Mention Count", "StockGeist 집계 소셜 미디어 언급 수"),
+
+    // ── Polymarket ──
+    "버즈점수" to LabelTooltip("Buzz Score", "Polymarket 관련 종목 화제성 점수"),
+    "PM트렌드" to LabelTooltip("Polymarket Trend", "시장 센티먼트 방향 (상승/하락/보합)"),
+    "PM센티먼트" to LabelTooltip("Polymarket Sentiment Score", "Polymarket 기반 센티먼트 점수"),
+    "PM강세" to LabelTooltip("Bullish %", "강세(매수) 의견 비율 (%)"),
+    "PM약세" to LabelTooltip("Bearish %", "약세(매도) 의견 비율 (%)"),
 )

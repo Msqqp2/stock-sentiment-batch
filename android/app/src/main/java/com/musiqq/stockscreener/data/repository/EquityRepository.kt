@@ -1,6 +1,9 @@
 package com.musiqq.stockscreener.data.repository
 
 import com.musiqq.stockscreener.data.remote.SupabaseApi
+import com.musiqq.stockscreener.data.remote.dto.EtfCountryExposureDto
+import com.musiqq.stockscreener.data.remote.dto.EtfHoldingDto
+import com.musiqq.stockscreener.data.remote.dto.EtfSectorExposureDto
 import com.musiqq.stockscreener.data.remote.dto.InsiderTradeDto
 import com.musiqq.stockscreener.domain.model.Equity
 import com.musiqq.stockscreener.domain.model.FilterCriteria
@@ -62,6 +65,18 @@ class EquityRepository @Inject constructor(
             order = "filing_date.desc.nullslast",
             limit = 50,
         )
+    }
+
+    suspend fun getEtfHoldings(symbol: String): List<EtfHoldingDto> {
+        return api.getEtfHoldings(etfSymbol = "eq.$symbol")
+    }
+
+    suspend fun getEtfSectorExposure(symbol: String): List<EtfSectorExposureDto> {
+        return api.getEtfSectorExposure(etfSymbol = "eq.$symbol")
+    }
+
+    suspend fun getEtfCountryExposure(symbol: String): List<EtfCountryExposureDto> {
+        return api.getEtfCountryExposure(etfSymbol = "eq.$symbol")
     }
 
     suspend fun getHeatmapData(sector: String? = null): List<Equity> {

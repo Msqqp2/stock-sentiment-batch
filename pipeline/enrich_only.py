@@ -91,9 +91,11 @@ def main():
     t0 = time.time()
     stocks = [r for r in records if r.get("asset_type") == "stock" and r.get("market_cap")]
     stocks.sort(key=lambda x: x["market_cap"], reverse=True)
-    deep_symbols = [r["symbol"] for r in stocks[:DEEP_FINANCIAL_TOP_N]]
+    top_stocks = stocks[:DEEP_FINANCIAL_TOP_N]
+    deep_symbols = [r["symbol"] for r in top_stocks]
+    mcap_map = {r["symbol"]: r["market_cap"] for r in top_stocks}
     if deep_symbols:
-        deep = batch_deep_financials(deep_symbols)
+        deep = batch_deep_financials(deep_symbols, mcap_map)
         for d in deep:
             rec = sym_map.get(d["symbol"])
             if rec:

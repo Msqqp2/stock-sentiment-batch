@@ -56,7 +56,18 @@ object NumberFormatter {
 
     fun formatYield(value: Double?): String {
         if (value == null) return "-"
-        return "${yieldFormat.format(value * 100)}%"
+        return "${yieldFormat.format(value)}%"
+    }
+
+    fun formatDollarVolume(value: Double?): String {
+        if (value == null) return "-"
+        return when {
+            value >= 1_000_000_000_000.0 -> "$${ratioFormat.format(value / 1_000_000_000_000.0)}T"
+            value >= 1_000_000_000.0 -> "$${ratioFormat.format(value / 1_000_000_000.0)}B"
+            value >= 1_000_000.0 -> "$${ratioFormat.format(value / 1_000_000.0)}M"
+            value >= 1_000.0 -> "$${ratioFormat.format(value / 1_000.0)}K"
+            else -> "$${priceFormat.format(value)}"
+        }
     }
 
     fun formatScore(value: Int?): String {

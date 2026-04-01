@@ -79,4 +79,41 @@ def compute_derived_fields(row: dict) -> dict:
                 (row["graham_number"] - price) / price * 100, 4
             )
 
+    # PEG (yfinance 미제공 시 직접 계산)
+    pe = row.get("pe_ttm")
+    eg = row.get("earnings_growth")
+    if not row.get("peg_ratio") and pe and eg and pe > 0 and eg > 0:
+        eg_pct = eg * 100  # 0.15 → 15
+        row["peg_ratio"] = round(pe / eg_pct, 4)
+
+    # P/FCF (yfinance 미제공 시 직접 계산)
+    if not row.get("pfcf_ratio") and mcap and fcf and fcf > 0:
+        row["pfcf_ratio"] = round(mcap / fcf, 4)
+
+    # DCF — 간이 10년 할인현금흐름 모델
+    shares = row.get("shares_outstanding")
+    if not row.get("dcf_value") and fcf and shares and fcf > 0 and shares > 0:
+        g = eg or row.get("revenue_growth")
+        if g is not None and g > 0:
+            g = min(g, 0.25)  # 성장률 상한 25%
+            r = 0.10           # 할인율 10%
+            terminal_g = 0.03  # 영구 성장률 3%
+
+            pv_sum = 0.0
+            projected_fcf = float(fcf)
+            for t in range(1, 11):
+                projected_fcf *= (1 + g)
+                pv_sum += projected_fcf / ((1 + r) ** t)
+
+            terminal_value = projected_fcf * (1 + terminal_g) / (r - terminal_g)
+            pv_sum += terminal_value / ((1 + r) ** 10)
+
+            dcf_per_share = pv_sum / shares
+            row["dcf_value"] = round(dcf_per_share, 4)
+
+            if price and price > 0:
+                row["dcf_upside_pct"] = round(
+                    (dcf_per_share - price) / price * 100, 4
+                )
+
     return row

@@ -60,6 +60,8 @@ fun OverviewTab(equity: Equity) {
             DataRow("저가", NumberFormatter.formatPrice(dto?.dayLow))
             DataRow("전일종가", NumberFormatter.formatPrice(dto?.prevClose))
             DataRow("평균거래량", NumberFormatter.formatVolume(dto?.avgVolume10d))
+            DataRow("거래대금", NumberFormatter.formatDollarVolume(dto?.turnover))
+            DataRow("갭비율", NumberFormatter.formatChangePct(dto?.gapPct))
         }
 
         // 밸류에이션
@@ -74,13 +76,25 @@ fun OverviewTab(equity: Equity) {
         // 기술적
         SectionCard("기술적 지표") {
             DataRow("RSI(14)", NumberFormatter.formatRatio(equity.rsi14))
+            DataRow("20일선", NumberFormatter.formatPrice(dto?.ma20))
             DataRow("50일선", NumberFormatter.formatPrice(equity.ma50))
             DataRow("200일선", NumberFormatter.formatPrice(equity.ma200))
+            DataRow("50일괴리율", NumberFormatter.formatChangePct(dto?.sma50Div))
+            DataRow("200일괴리율", NumberFormatter.formatChangePct(dto?.sma200Div))
             DataRow("52주 고가", NumberFormatter.formatPrice(equity.week52High))
             DataRow("52주 저가", NumberFormatter.formatPrice(equity.week52Low))
             DataRow("고가괴리", NumberFormatter.formatPct(equity.pctFrom52h?.let { it / 100 }))
-            DataRow("상대거래량", NumberFormatter.formatMultiple(equity.relativeVolume))
+            DataRow("저가괴리", NumberFormatter.formatChangePct(dto?.pctFrom52l))
+            DataRow("MACD", NumberFormatter.formatRatio(dto?.macd))
+            DataRow("MACD시그널", NumberFormatter.formatRatio(dto?.macdSignal))
             DataRow("MACD히스토", NumberFormatter.formatRatio(dto?.macdHist))
+            DataRow("Stoch %K", NumberFormatter.formatRatio(dto?.stochK))
+            DataRow("Stoch %D", NumberFormatter.formatRatio(dto?.stochD))
+            DataRow("ADX(14)", NumberFormatter.formatRatio(dto?.adx14))
+            DataRow("CCI(20)", NumberFormatter.formatRatio(dto?.cci20))
+            DataRow("Williams %R", NumberFormatter.formatRatio(dto?.williamsR))
+            DataRow("ATR(14)", NumberFormatter.formatRatio(dto?.atr14))
+            DataRow("상대거래량", NumberFormatter.formatMultiple(equity.relativeVolume))
             DataRow("주간변동성", NumberFormatter.formatPct(dto?.volatilityW))
             DataRow("월간변동성", NumberFormatter.formatPct(dto?.volatilityM))
         }
@@ -92,6 +106,18 @@ fun OverviewTab(equity: Equity) {
             DataRow("모멘텀", NumberFormatter.formatScore(equity.scoreMomentum))
             DataRow("성장", NumberFormatter.formatScore(equity.scoreGrowth))
             DataRow("종합", NumberFormatter.formatScore(equity.scoreTotal))
+        }
+
+        // ETF 정보 (ETF일 때만)
+        if (equity.assetType.equals("etf", ignoreCase = true)) {
+            SectionCard("ETF 정보") {
+                DataRow("AUM", NumberFormatter.formatMarketCap(dto?.aum))
+                DataRow("NAV", NumberFormatter.formatPrice(dto?.nav))
+                DataRow("보유종목수", NumberFormatter.formatInt(dto?.holdingsCount))
+                DataRow("추종지수", dto?.indexTracked ?: "-")
+                DataRow("자산분류", dto?.assetClass ?: "-")
+                DataRow("보수율", NumberFormatter.formatYield(dto?.expenseRatio))
+            }
         }
 
         // 소셜
