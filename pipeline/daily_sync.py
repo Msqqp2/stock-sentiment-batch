@@ -131,15 +131,20 @@ def main():
 
     # ── ⑧ 심화 재무 (상위 500) ──
     t0 = time.time()
-    # 시총 기준 상위 500 추출
-    stocks_with_mcap = [
-        r for r in records
-        if r.get("asset_type") == "stock" and r.get("market_cap")
-    ]
-    stocks_with_mcap.sort(key=lambda x: x["market_cap"], reverse=True)
-    top_500 = stocks_with_mcap[:DEEP_FINANCIAL_TOP_N]
-    top_500_symbols = [r["symbol"] for r in top_500]
-    mcap_map = {r["symbol"]: r["market_cap"] for r in top_500}
+    # DB에서 시총 Top 500 조회 (Info는 weekly이므로 인메모리에 없음)
+    top_by_mcap = (
+        supabase.table("latest_equities")
+        .select("symbol,market_cap")
+        .eq("is_delisted", False)
+        .eq("asset_type", "stock")
+        .not_.is_("market_cap", "null")
+        .order("market_cap", desc=True)
+        .limit(DEEP_FINANCIAL_TOP_N)
+        .execute()
+        .data
+    )
+    top_500_symbols = [r["symbol"] for r in top_by_mcap]
+    mcap_map = {r["symbol"]: r["market_cap"] for r in top_by_mcap}
 
     deep_data = batch_deep_financials(top_500_symbols, mcap_map)
     for d in deep_data:
