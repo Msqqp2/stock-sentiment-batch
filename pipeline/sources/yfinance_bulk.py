@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 # Ticker.info → DB 컬럼 매핑
 INFO_FIELD_MAP = {
+    "shortName": "name",
+    "longName": "name",
     "currentPrice": "price",
     "regularMarketPrice": "price",
     "marketCap": "market_cap",
