@@ -51,7 +51,7 @@ val COLUMN_DEFS = listOf(
     // 수익성
     ColumnDef("roe", "ROE", "ROE", "수익성"),
     ColumnDef("roa", "ROA", "ROA", "수익성"),
-    ColumnDef("roic", "ROIC", "ROIC", "수익성"),
+    ColumnDef("roic", "ROIC (투하자본이익률)", "ROIC", "수익성"),
     ColumnDef("gross_margin", "매출총이익률", "Gross Margin", "수익성"),
     ColumnDef("operating_margin", "영업이익률", "Op. Margin", "수익성"),
     ColumnDef("net_margin", "순이익률", "Net Margin", "수익성"),

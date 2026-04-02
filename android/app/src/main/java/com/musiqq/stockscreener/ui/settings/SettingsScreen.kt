@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.musiqq.stockscreener.data.local.ThemeMode
+import com.musiqq.stockscreener.domain.model.ScoreWeights
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,25 +89,23 @@ fun SettingsScreen(
                 Spacer(Modifier.height(8.dp))
 
                 WeightSlider("밸류 (Value)", weights.value) { newVal ->
-                    viewModel.setScoreWeights(weights.copy(value = newVal))
+                    viewModel.setScoreWeights(balanceWeights(weights, "value", newVal))
                 }
                 WeightSlider("퀄리티 (Quality)", weights.quality) { newVal ->
-                    viewModel.setScoreWeights(weights.copy(quality = newVal))
+                    viewModel.setScoreWeights(balanceWeights(weights, "quality", newVal))
                 }
                 WeightSlider("모멘텀 (Momentum)", weights.momentum) { newVal ->
-                    viewModel.setScoreWeights(weights.copy(momentum = newVal))
+                    viewModel.setScoreWeights(balanceWeights(weights, "momentum", newVal))
                 }
                 WeightSlider("성장 (Growth)", weights.growth) { newVal ->
-                    viewModel.setScoreWeights(weights.copy(growth = newVal))
+                    viewModel.setScoreWeights(balanceWeights(weights, "growth", newVal))
                 }
 
                 Spacer(Modifier.height(4.dp))
-                val total = weights.value + weights.quality + weights.momentum + weights.growth
                 Text(
-                    text = "합계: ${String.format("%.0f", total * 100)}%",
+                    text = "합계: 100%",
                     fontSize = 12.sp,
-                    color = if (total in 0.99f..1.01f) MaterialTheme.colorScheme.onSurfaceVariant
-                    else MaterialTheme.colorScheme.error,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -146,4 +145,36 @@ private fun WeightSlider(
             steps = 19,
         )
     }
+}
+
+/**
+ * 가중치 합계를 항상 100%로 유지.
+ * 변경된 슬라이더 외 나머지를 비례 감소/증가.
+ */
+private fun balanceWeights(current: ScoreWeights, changed: String, newVal: Float): ScoreWeights {
+    val clamped = newVal.coerceIn(0f, 1f)
+    val remaining = 1f - clamped
+
+    val others = mapOf(
+        "value" to current.value,
+        "quality" to current.quality,
+        "momentum" to current.momentum,
+        "growth" to current.growth,
+    ).filterKeys { it != changed }
+
+    val othersSum = others.values.sum()
+
+    val adjusted = if (othersSum > 0f) {
+        others.mapValues { (_, v) -> v / othersSum * remaining }
+    } else {
+        val share = remaining / others.size
+        others.mapValues { share }
+    }
+
+    return ScoreWeights(
+        value = if (changed == "value") clamped else adjusted["value"] ?: 0f,
+        quality = if (changed == "quality") clamped else adjusted["quality"] ?: 0f,
+        momentum = if (changed == "momentum") clamped else adjusted["momentum"] ?: 0f,
+        growth = if (changed == "growth") clamped else adjusted["growth"] ?: 0f,
+    )
 }

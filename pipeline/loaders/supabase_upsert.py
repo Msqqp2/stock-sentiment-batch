@@ -294,6 +294,18 @@ def upsert_etf_profile(supabase, records: list[dict]):
     logger.info(f"[UPSERT] etf_profile: {len(etf_rows)}건 완료")
 
 
+def upsert_etf_profile_etfpy(supabase, row: dict):
+    """etfpy 데이터로 etf_profile 테이블 UPSERT."""
+    if not row.get("symbol"):
+        return
+    try:
+        supabase.table("etf_profile").upsert(
+            [row], on_conflict="symbol"
+        ).execute()
+    except Exception as e:
+        logger.warning(f"[UPSERT] etf_profile ({row['symbol']}) 실패: {e}")
+
+
 def upsert_etf_holdings(supabase, etf_symbol: str, holdings: list[dict]):
     """ETF 구성종목을 etf_holdings 테이블에 교체 적재."""
     try:
@@ -392,28 +404,19 @@ def upsert_etf_country_exposure(supabase, etf_symbol: str, countries: list[dict]
         logger.warning(f"[UPSERT] etf_country_exposure ({etf_symbol}) 실패: {e}")
 
 
-def upsert_etf_list_cache(supabase, etf_list: list[dict]):
-    """Finnhub ETF 지원 목록 캐싱 (월 1회)."""
-    now_ts = datetime.now(timezone.utc).isoformat()
-    rows = [
-        {"symbol": e.get("symbol"), "name": e.get("description", ""), "cached_at": now_ts}
-        for e in etf_list
-        if e.get("symbol")
-    ]
 
-    if not rows:
+def upsert_recommendation_history(supabase, records: list[dict], asof: str):
+    """fh_recommendation_history 테이블에 UPSERT (symbol+period 유니크)."""
+    if not records:
         return
-
-    for i in range(0, len(rows), UPSERT_CHUNK_SIZE):
-        chunk = rows[i : i + UPSERT_CHUNK_SIZE]
-        try:
-            supabase.table("etf_list_cache").upsert(
-                chunk, on_conflict="symbol"
-            ).execute()
-        except Exception as e:
-            logger.warning(f"[UPSERT] etf_list_cache 실패: {e}")
-
-    logger.info(f"[UPSERT] etf_list_cache: {len(rows)}건 캐싱 완료")
+    for rec in records:
+        rec["asof"] = asof
+    try:
+        supabase.table("fh_recommendation_history").upsert(
+            records, on_conflict="symbol,period"
+        ).execute()
+    except Exception as e:
+        logger.warning(f"[UPSERT] fh_recommendation_history 실패: {e}")
 
 
 def mark_delisted(supabase, active_symbols: set[str]):

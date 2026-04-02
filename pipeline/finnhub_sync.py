@@ -26,7 +26,7 @@ from pipeline.config import (
     FINNHUB_RATE_LIMIT_SLEEP,
     FINNHUB_SENTIMENT_TOP_N,
 )
-from pipeline.loaders.supabase_upsert import get_supabase_client
+from pipeline.loaders.supabase_upsert import get_supabase_client, upsert_recommendation_history
 
 logging.basicConfig(
     level=logging.INFO,
@@ -114,14 +114,18 @@ def fetch_insider_transactions(symbol: str) -> dict:
     }
 
 
-def fetch_recommendation(symbol: str) -> dict:
-    """애널리스트 투자의견 (Finnhub)."""
+def fetch_recommendation(symbol: str) -> tuple[dict, list[dict]]:
+    """
+    애널리스트 투자의견 (Finnhub).
+    Returns: (latest_equities 업데이트용 dict, fh_recommendation_history 4개월치 list)
+    """
     data = _fh_get("/stock/recommendation", {"symbol": symbol})
     if not data or not isinstance(data, list) or len(data) == 0:
-        return {}
+        return {}, []
 
+    # latest_equities용 (최신 1건)
     latest = data[0]
-    return {
+    eq_update = {
         "fh_rec_buy": latest.get("buy"),
         "fh_rec_hold": latest.get("hold"),
         "fh_rec_sell": latest.get("sell"),
@@ -129,6 +133,21 @@ def fetch_recommendation(symbol: str) -> dict:
         "fh_rec_strong_sell": latest.get("strongSell"),
         "fh_rec_period": latest.get("period"),
     }
+
+    # fh_recommendation_history용 (4개월치 전부)
+    history = []
+    for item in data:
+        history.append({
+            "symbol": symbol,
+            "period": item.get("period"),
+            "strong_buy": item.get("strongBuy", 0),
+            "buy": item.get("buy", 0),
+            "hold": item.get("hold", 0),
+            "sell": item.get("sell", 0),
+            "strong_sell": item.get("strongSell", 0),
+        })
+
+    return eq_update, history
 
 
 def main():
@@ -170,13 +189,17 @@ def main():
         time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
         api_calls += 1
 
-        rec = fetch_recommendation(sym)
+        rec, rec_history = fetch_recommendation(sym)
         time.sleep(FINNHUB_RATE_LIMIT_SLEEP)
         api_calls += 1
 
         row.update(mspr)
         row.update(txns)
         row.update(rec)
+
+        # fh_recommendation_history UPSERT (4개월치)
+        if rec_history:
+            upsert_recommendation_history(supabase, rec_history, now_ts)
 
         has_data = any(
             row.get(k) is not None

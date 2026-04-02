@@ -1,15 +1,15 @@
-name: Weekly Finnhub ETF (repo-B, 목요일)
+name: Weekly ETF (repo-B, 목요일, etfpy)
 
 on:
   schedule:
-    - cron: '30 22 * * 3'      # UTC 22:30 수요일 = KST 07:30 목요일
+    - cron: '30 21 * * 3'      # UTC 21:30 수요일 = KST 06:30 목요일 (지연 포함 ~07:00)
   workflow_dispatch:
 
 jobs:
   run:
     if: github.repository_owner == 'Msqqp2'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +31,6 @@ jobs:
         id: sync_run
         if: steps.holiday_check.outputs.is_trading_day == 'true'
         env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -54,11 +53,11 @@ jobs:
           secure: true
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "Finnhub ETF batch FAILED — ${{ github.run_id }}"
+          subject: "ETF (etfpy) batch FAILED — ${{ github.run_id }}"
           to: ${{ secrets.EMAIL_TO }}
           from: Stock Screener Bot <${{ secrets.SMTP_USERNAME }}>
           body: |
-            Finnhub ETF batch failure alert
+            ETF (etfpy) batch failure alert
 
             Workflow: ${{ github.workflow }}
             Run ID: ${{ github.run_id }}

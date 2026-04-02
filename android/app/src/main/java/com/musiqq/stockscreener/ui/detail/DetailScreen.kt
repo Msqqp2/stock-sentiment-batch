@@ -165,7 +165,7 @@ fun DetailScreen(
                             0 -> OverviewTab(equity)
                             1 -> FinancialTab(equity)
                             2 -> SupplyDemandTab(equity, state.insiderTrades)
-                            3 -> AnalystTab(equity)
+                            3 -> AnalystTab(equity, state.recommendationHistory, state.analystRatings)
                         }
                     }
                 }

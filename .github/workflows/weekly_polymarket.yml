@@ -2,7 +2,7 @@ name: Weekly Adanos Polymarket (repo-B, 화요일)
 
 on:
   schedule:
-    - cron: '30 22 * * 1'      # UTC 22:30 월요일 = KST 07:30 화요일
+    - cron: '30 21 * * 1'      # UTC 21:30 월요일 = KST 06:30 화요일 (지연 포함 ~07:00)
   workflow_dispatch:
 
 jobs:

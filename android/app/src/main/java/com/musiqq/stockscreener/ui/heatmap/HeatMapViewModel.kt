@@ -16,6 +16,7 @@ data class HeatMapUiState(
     val data: List<Equity> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
+    val dataDate: String? = null,
 )
 
 @HiltViewModel
@@ -37,7 +38,8 @@ class HeatMapViewModel @Inject constructor(
             _uiState.value = HeatMapUiState(isLoading = true)
             try {
                 val data = repository.getHeatmapData(sector)
-                _uiState.value = HeatMapUiState(data = data, isLoading = false)
+                val dataDate = data.firstOrNull()?.dataDate
+                _uiState.value = HeatMapUiState(data = data, isLoading = false, dataDate = dataDate)
             } catch (e: Exception) {
                 _uiState.value = HeatMapUiState(
                     isLoading = false,

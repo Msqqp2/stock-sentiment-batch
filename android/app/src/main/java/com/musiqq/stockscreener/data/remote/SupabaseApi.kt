@@ -5,9 +5,29 @@ import com.musiqq.stockscreener.data.remote.dto.EtfCountryExposureDto
 import com.musiqq.stockscreener.data.remote.dto.EtfHoldingDto
 import com.musiqq.stockscreener.data.remote.dto.EtfSectorExposureDto
 import com.musiqq.stockscreener.data.remote.dto.InsiderTradeDto
+import com.google.gson.annotations.SerializedName
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.QueryMap
+
+data class RecommendationHistoryDto(
+    val symbol: String? = null,
+    val period: String? = null,
+    @SerializedName("strong_buy") val strongBuy: Int? = null,
+    val buy: Int? = null,
+    val hold: Int? = null,
+    val sell: Int? = null,
+    @SerializedName("strong_sell") val strongSell: Int? = null,
+)
+
+data class AnalystRatingDto(
+    val symbol: String? = null,
+    val date: String? = null,
+    val action: String? = null,
+    val analyst: String? = null,
+    val rating: String? = null,
+    @SerializedName("price_target") val priceTarget: String? = null,
+)
 
 interface SupabaseApi {
 
@@ -70,6 +90,20 @@ interface SupabaseApi {
         @Query("select") select: String = "etf_symbol,country,weight",
         @Query("order") order: String = "weight.desc.nullslast",
     ): List<EtfCountryExposureDto>
+
+    @GET("rest/v1/fh_recommendation_history")
+    suspend fun getRecommendationHistory(
+        @Query("symbol") symbol: String,
+        @Query("order") order: String = "period.desc",
+        @Query("limit") limit: Int = 4,
+    ): List<RecommendationHistoryDto>
+
+    @GET("rest/v1/analyst_ratings_history")
+    suspend fun getAnalystRatingsHistory(
+        @Query("symbol") symbol: String,
+        @Query("order") order: String = "date.desc",
+        @Query("limit") limit: Int = 20,
+    ): List<AnalystRatingDto>
 
     @GET("rest/v1/latest_equities")
     suspend fun getHeatmapData(

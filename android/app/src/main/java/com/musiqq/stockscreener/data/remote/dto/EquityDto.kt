@@ -141,12 +141,10 @@ data class EquityDto(
     @SerializedName("fh_rec_period") val fhRecPeriod: String? = null,
     @SerializedName("fh_insider_buy_count") val fhInsiderBuyCount: Int? = null,
     @SerializedName("fh_insider_sell_count") val fhInsiderSellCount: Int? = null,
-    // StockGeist
-    @SerializedName("sg_sentiment_pos") val sgSentimentPos: Double? = null,
-    @SerializedName("sg_sentiment_neg") val sgSentimentNeg: Double? = null,
-    @SerializedName("sg_sentiment_neu") val sgSentimentNeu: Double? = null,
-    @SerializedName("sg_emotionality") val sgEmotionality: Double? = null,
-    @SerializedName("sg_mention_count") val sgMentionCount: Int? = null,
+    // Finviz
+    val description: String? = null,
+    val peers: List<String>? = null,
+    @SerializedName("etf_holders") val etfHolders: List<String>? = null,
     // Polymarket (Adanos)
     @SerializedName("pm_buzz_score") val pmBuzzScore: Double? = null,
     @SerializedName("pm_trend") val pmTrend: String? = null,

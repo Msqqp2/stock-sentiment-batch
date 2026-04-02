@@ -1,8 +1,10 @@
 """
 메인 오케스트레이터 — 매일 배치 파이프라인 (repo-A).
-① Universe Sync → ② 가격 벌크 → ② Info (월요일만) →
+① Universe Sync → ② 가격 벌크 →
 ⑧ 심화재무 → ⑨ 기술적 → ⑩ Performance →
 Scoring → UPSERT → ETF Profile 복사 → Sanity Check
+
+yfinance Info는 weekly_info로 분리됨 (pipeline/info_sync.py).
 """
 
 import logging
@@ -16,7 +18,7 @@ from dotenv import load_dotenv
 # .env 파일 로드 (프로젝트 루트 기준)
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-from pipeline.config import DEEP_FINANCIAL_TOP_N, TECHNICALS_TOP_N, YFINANCE_INFO_TOP_N
+from pipeline.config import DEEP_FINANCIAL_TOP_N, TECHNICALS_TOP_N
 from pipeline.loaders.supabase_upsert import (
     cleanup_fmp_cache,
     get_supabase_client,
@@ -30,7 +32,6 @@ from pipeline.sources.universe import fetch_universe
 from pipeline.sources.yfinance_bulk import (
     fetch_bulk_prices,
     fetch_price_history,
-    fetch_ticker_info,
 )
 from pipeline.transforms.compute import compute_derived_fields
 from pipeline.transforms.deep_financials import batch_deep_financials
@@ -85,15 +86,8 @@ def main():
         priority_list = list(price_data.keys())[:2000]
     step_timings["② Priority 빌드"] = time.time() - t0
 
-    # ② yfinance Ticker.info (월요일만 실행, 3,000건 — ETF 포함)
-    t0 = time.time()
-    if today.weekday() == 0:  # Monday
-        info_data = fetch_ticker_info(priority_list[:YFINANCE_INFO_TOP_N])
-        step_timings["② yfinance Info"] = time.time() - t0
-    else:
-        info_data = {}
-        step_timings["② yfinance Info"] = time.time() - t0
-        logger.info("[yfinance] Info — 월요일만 실행 (스킵)")
+    # yfinance Info는 weekly_info (info_sync.py)로 분리됨
+    info_data = {}
 
     # ── 데이터 병합 ──
     t0 = time.time()

@@ -105,14 +105,6 @@ def get_etf_symbols(supabase, top_n: int) -> list[str]:
     return symbols
 
 
-def get_finnhub_etf_list_cache(supabase) -> set[str]:
-    """Finnhub 지원 ETF 목록 캐시 조회."""
-    try:
-        resp = supabase.table("etf_list_cache").select("symbol").execute()
-        return {r["symbol"] for r in (resp.data or [])}
-    except Exception:
-        return set()
-
 
 def send_batch_email(subject: str, body: str):
     """배치 완료/실패 이메일 발송."""
@@ -126,8 +118,12 @@ def send_batch_email(subject: str, body: str):
         msg["From"] = f"Stock Screener Bot <{SMTP_USERNAME}>"
         msg["To"] = EMAIL_TO
 
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        if SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT)
+        else:
+            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
             server.starttls()
+        with server:
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
             server.send_message(msg)
 

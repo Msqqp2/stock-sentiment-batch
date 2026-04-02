@@ -3,6 +3,8 @@ package com.musiqq.stockscreener.ui.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.musiqq.stockscreener.data.remote.AnalystRatingDto
+import com.musiqq.stockscreener.data.remote.RecommendationHistoryDto
 import com.musiqq.stockscreener.data.remote.dto.EtfCountryExposureDto
 import com.musiqq.stockscreener.data.remote.dto.EtfHoldingDto
 import com.musiqq.stockscreener.data.remote.dto.EtfSectorExposureDto
@@ -24,6 +26,8 @@ data class DetailUiState(
     val etfHoldings: List<EtfHoldingDto> = emptyList(),
     val etfSectors: List<EtfSectorExposureDto> = emptyList(),
     val etfCountries: List<EtfCountryExposureDto> = emptyList(),
+    val recommendationHistory: List<RecommendationHistoryDto> = emptyList(),
+    val analystRatings: List<AnalystRatingDto> = emptyList(),
     val isLoading: Boolean = true,
     val isWatchlisted: Boolean = false,
     val error: String? = null,
@@ -68,12 +72,22 @@ class DetailViewModel @Inject constructor(
                     try { equityRepository.getEtfCountryExposure(symbol) } catch (_: Exception) { emptyList() }
                 } else emptyList()
 
+                // Recommendation history + analyst ratings
+                val recHistory = if (!isEtf) {
+                    try { equityRepository.getRecommendationHistory(symbol) } catch (_: Exception) { emptyList() }
+                } else emptyList()
+                val analystRatings = if (!isEtf) {
+                    try { equityRepository.getAnalystRatingsHistory(symbol) } catch (_: Exception) { emptyList() }
+                } else emptyList()
+
                 _uiState.value = DetailUiState(
                     equity = equity,
                     insiderTrades = insiders,
                     etfHoldings = holdings,
                     etfSectors = sectors,
                     etfCountries = countries,
+                    recommendationHistory = recHistory,
+                    analystRatings = analystRatings,
                     isLoading = false,
                     isWatchlisted = isWatchlisted,
                 )

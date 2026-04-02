@@ -28,7 +28,7 @@ fun FinancialTab(equity: Equity) {
         SectionCard("수익성") {
             DataRow("ROE", NumberFormatter.formatPct(dto?.roe))
             DataRow("ROA", NumberFormatter.formatPct(dto?.roa))
-            DataRow("ROIC", NumberFormatter.formatPct(dto?.roic))
+            DataRow("ROIC (투하자본이익률)", NumberFormatter.formatPct(dto?.roic))
             DataRow("매출총이익률", NumberFormatter.formatPct(dto?.grossMargin))
             DataRow("영업이익률", NumberFormatter.formatPct(dto?.operatingMargin))
             DataRow("순이익률", NumberFormatter.formatPct(dto?.profitMargin))

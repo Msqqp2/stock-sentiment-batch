@@ -20,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -44,6 +46,18 @@ fun HeatMapScreen(
                 }
             }
             else -> {
+                // 기준일 표시
+                state.dataDate?.let { dateStr ->
+                    val formatted = dateStr.replace("-", ".")
+                    Text(
+                        text = "${formatted} 기준",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth().padding(end = 12.dp, top = 4.dp),
+                    )
+                }
+
                 val jsonData = viewModel.toJsonForWebView()
 
                 val mainHandler = Handler(Looper.getMainLooper())

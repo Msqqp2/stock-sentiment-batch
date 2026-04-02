@@ -1,5 +1,7 @@
 package com.musiqq.stockscreener.data.repository
 
+import com.musiqq.stockscreener.data.remote.AnalystRatingDto
+import com.musiqq.stockscreener.data.remote.RecommendationHistoryDto
 import com.musiqq.stockscreener.data.remote.SupabaseApi
 import com.musiqq.stockscreener.data.remote.dto.EtfCountryExposureDto
 import com.musiqq.stockscreener.data.remote.dto.EtfHoldingDto
@@ -79,6 +81,14 @@ class EquityRepository @Inject constructor(
         return api.getEtfCountryExposure(etfSymbol = "eq.$symbol")
     }
 
+    suspend fun getRecommendationHistory(symbol: String): List<RecommendationHistoryDto> {
+        return api.getRecommendationHistory(symbol = "eq.$symbol")
+    }
+
+    suspend fun getAnalystRatingsHistory(symbol: String): List<AnalystRatingDto> {
+        return api.getAnalystRatingsHistory(symbol = "eq.$symbol")
+    }
+
     suspend fun getHeatmapData(sector: String? = null): List<Equity> {
         val filters = mutableMapOf<String, String>()
         filters["asset_type"] = "eq.stock"
@@ -86,7 +96,7 @@ class EquityRepository @Inject constructor(
         sector?.let { filters["sector"] = "eq.$it" }
         return api.getHeatmapData(
             filters = filters,
-            select = "symbol,name,sector,market_cap,change_pct",
+            select = "symbol,name,sector,market_cap,change_pct,data_date",
             order = "market_cap.desc.nullslast",
             limit = 500,
         ).map { it.toDomain() }

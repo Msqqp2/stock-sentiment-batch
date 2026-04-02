@@ -33,9 +33,9 @@ fun EquityListItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(36.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Symbol + Name
